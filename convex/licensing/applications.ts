@@ -1,12 +1,14 @@
 import { v } from 'convex/values'
-import { mutation, query } from '../_generated/server'
+import { query } from '../_generated/server'
 import { channel } from '../shared/validators'
-import { getOrCreateViewer, getViewer } from '../identity/model'
+import { authedMutation } from '../rbac'
+import { getViewer } from '../identity/model'
 
 // First vertical slice: the licence-application flow (replaces the Torres Strait
 // paper process). Offline-aware: the client supplies a device-generated
-// `clientId`; submitting again with the same id UPDATES the existing record
-// rather than creating a duplicate, so a lost ack on a flaky link is safe.
+// `clientId`; submitting again with the same id UPDATES the existing record.
+// RBAC: a fisher lodges/sees only their own applications (enforced by the
+// authed wrappers' row-level security); regulators and community admins see more.
 
 // Statutory licence types (Act s.19 family). "TIB"/"TVH" are sectors, passed
 // separately — not licence types.
@@ -27,7 +29,7 @@ const sector = v.union(
   v.literal('none'),
 )
 
-export const submit = mutation({
+export const submit = authedMutation({
   args: {
     clientId: v.string(), // device-generated UUID — idempotency key
     clientCreatedAt: v.optional(v.number()),
@@ -46,7 +48,7 @@ export const submit = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const { party } = await getOrCreateViewer(ctx)
+    const party = ctx.viewer.party
 
     const licenceType = await ctx.db
       .query('licenceTypes')
@@ -59,9 +61,7 @@ export const submit = mutation({
     }
 
     const now = Date.now()
-    const status = (args.submit ? 'submitted' : 'draft') as
-      | 'submitted'
-      | 'draft'
+    const status = (args.submit ? 'submitted' : 'draft') as 'submitted' | 'draft'
 
     const fields = {
       applicantPartyId: party._id,
@@ -79,7 +79,9 @@ export const submit = mutation({
       submittedAt: args.submit ? now : undefined,
     }
 
-    // Idempotent upsert keyed on the device clientId.
+    // Idempotent upsert keyed on the device clientId. RLS already scopes this
+    // read to the viewer's own applications, so a clientId can't collide across
+    // applicants; the explicit ownership check is a belt-and-braces backstop.
     const existing = await ctx.db
       .query('applications')
       .withIndex('by_clientId', (q) => q.eq('clientId', args.clientId))
@@ -97,6 +99,10 @@ export const submit = mutation({
   },
 })
 
+// A fisher's own list — explicitly self-scoped, and soft (returns [] for an
+// authenticated-but-not-yet-bootstrapped user, e.g. before their first submit)
+// so it never throws when loaded eagerly on the dashboard. Cross-party reads
+// (officer/community-admin views) go through the RLS-wrapped authed wrappers.
 export const listMine = query({
   args: {},
   handler: async (ctx) => {

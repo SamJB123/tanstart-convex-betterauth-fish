@@ -327,6 +327,38 @@ chloronotus*, CAAB **25417001**, 40 t) are now seeded as species + BDM schemes
 "all other species" **50 t basket** — a multi-species catch-all, not a single
 taxon, so deliberately not a per-species scheme.
 
+### Quota engine — built & verified (backend)
+`convex/quota/engine.ts` + `aggregate.ts` implement allocate / consume / trueUpFromCdr
+/ transfer / lease + balance queries, backed by `@convex-dev/aggregate` (balances =
+baseAllowance + signed ledger sum, O(log n)). All 6 rule-paths pass an end-to-end
+smoke test (`quota/smoke:run`) against the real components. Encoded decisions:
+over-quota is **advisory** (record + flag + recommend closure, never block);
+quota debits **provisionally on the log, trued-up to the verified CDR**; balances via
+the aggregate; entitlements are **vessel-aware** (single placeholder Sunset vessel).
+**Discretionary / needs-AFMA (modelled as flags, not hard rules):** closure is an
+advisory recommendation (real closure is a lagged CEO decision); per-vessel Sunset
+allowances are a single placeholder; the processing-form → conversion-factor mapping
+is simplified; engine mutations are **not yet RBAC-wrapped**.
+
+### RBAC + row-level security — built & verified
+`convex/rbac.ts`: Better Auth identity → roles mirrored in `users` /
+`communityMembership` → `convex-helpers` row-level security + custom function
+wrappers (`authedQuery/Mutation` with RLS, `regulatorQuery/Mutation` staff-only),
+fail-closed. A **community admin sees their members' data** via a reporter→community
+join (`getManyFrom`, precomputed once per request — no per-row lookups). Engine
+operational mutations are now **internal** (system/CDR/tests); client-facing entry
+points are RBAC-wrapped (regulator manage, authed view); `applications.submit` is
+RLS-enforced, `listMine` is soft self-scoped. Proven type-safe (real rows, no casts):
+`rbacSmoke:run` 11/11 (regulator-all, fisher-own, community-admin-join, deny-others),
+engine `quota/smoke:run` still 6/6 after the restructure.
+Viewer bootstrap is closed: a Better Auth `user.onCreate` trigger (`auth.ts`)
+mirrors each new user into `parties`/`users` at sign-up via the shared idempotent
+`ensureAppUser` (`identity/users.ts`), with `getOrCreateViewer` as a fallback. The
+self-referential module (authComponent ↔ internal.auth.* trigger exports) is
+resolved with one `ReturnType<typeof createClient<DataModel>>` annotation — the
+client's type depends only on DataModel, so this breaks the inference loop cleanly
+(no value casts).
+
 ### Dugong & Turtle — now fully sourced (statutory) and partly encoded
 The statutory instruments are held: **FMN 65** (dugong, 23 Feb 2004) and **FMN 66**
 (turtle). FMN 65 rules: dugong take prohibited except by Traditional Inhabitants in

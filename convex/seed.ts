@@ -69,6 +69,7 @@ async function setSectorEntitlement(
   allocationModel: 'pooled_competitive' | 'individual',
   allowanceKg: number,
   legislativeBasis: string,
+  vesselId?: Id<'vessels'>,
 ) {
   const existing = (
     await ctx.db.query('entitlements').withIndex('by_scheme', (q) => q.eq('schemeId', schemeId)).take(50)
@@ -78,6 +79,7 @@ async function setSectorEntitlement(
     fisheryId,
     periodId,
     holderPartyId,
+    vesselId,
     sector,
     allocationModel,
     measureType: 'weight' as const,
@@ -755,6 +757,21 @@ export const seedReferenceData = internalMutation({
       .unique()
     if (finfish && tsra) {
       const period = await getPeriod(ctx, finfish._id, 'FY2024-25', Date.UTC(2024, 6, 1), Date.UTC(2025, 5, 30))
+      // Single placeholder Sunset vessel so the per-vessel relations are fully
+      // wired (real per-vessel allowances come from AFMA concession data later).
+      let sunsetVessel = await ctx.db
+        .query('vessels')
+        .withIndex('by_distinguishingSymbol', (q) => q.eq('distinguishingSymbol', 'SUNSET-PLACEHOLDER'))
+        .unique()
+      if (!sunsetVessel) {
+        const vid = await ctx.db.insert('vessels', {
+          boatName: 'Sunset placeholder vessel',
+          distinguishingSymbol: 'SUNSET-PLACEHOLDER',
+          isAustralianBoat: true,
+          ownerPartyId: tsra._id,
+        })
+        sunsetVessel = (await ctx.db.get(vid))!
+      }
       const finfishData = [
         { caab: '37441007', name: 'Spanish mackerel', cf: { filleted: 1.608, gilled_gutted: 1.048 }, tib: 18000, sunset: 59000 },
         { caab: '37311905', name: 'Coral trout', cf: { filleted: 2, gilled_gutted: 1.1 }, tib: 108000, sunset: 15000 },
@@ -764,7 +781,7 @@ export const seedReferenceData = internalMutation({
         if (!sp) continue
         const scheme = await getWeightScheme(ctx, finfish._id, period._id, `Finfish ${d.name} 2024-25`, sp._id, d.cf)
         await setSectorEntitlement(ctx, scheme._id, finfish._id, period._id, tsra._id, 'traditional_inhabitant', 'pooled_competitive', d.tib, 'Finfish Catchwatch 2024-25 (TIB sector TAC, kg)')
-        await setSectorEntitlement(ctx, scheme._id, finfish._id, period._id, tsra._id, 'sunset', 'individual', d.sunset, 'Finfish Catchwatch 2024-25 (Sunset sector TAC, kg)')
+        await setSectorEntitlement(ctx, scheme._id, finfish._id, period._id, tsra._id, 'sunset', 'individual', d.sunset, 'Finfish Catchwatch 2024-25 (Sunset sector TAC, kg)', sunsetVessel._id)
         finfishSchemes++
       }
     }

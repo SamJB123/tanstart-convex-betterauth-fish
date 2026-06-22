@@ -11,6 +11,7 @@
     "start": "pnpx srvx --prod -s ../client dist/server/server.js"
   },
   "dependencies": {
+    "@convex-dev/aggregate": "^0.2.1",
     "@convex-dev/better-auth": "^0.12.2",
     "@convex-dev/geospatial": "^0.2.1",
     "@solidjs/web": "2.0.0-beta.14",
@@ -21,6 +22,7 @@
     "better-auth": "^1.6.9",
     "clsx": "^2.1.1",
     "convex": "^1.28.2",
+    "convex-helpers": "^0.1.119",
     "redaxios": "^0.5.1",
     "solid-js": "2.0.0-beta.14",
     "tailwind-merge": "^2.6.0",
@@ -28,11 +30,14 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
     "@types/node": "^22.10.2",
     "combinate": "^1.1.11",
+    "convex-test": "^0.0.53",
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
     "vite-plugin-solid": "^3.0.0-next.5",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^4.1.9"
   }
 }

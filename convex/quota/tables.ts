@@ -55,6 +55,7 @@ export const quotaTables = {
     periodId: v.id('periods'),
     holderPartyId: v.optional(v.id('parties')),
     communityId: v.optional(v.id('communities')),
+    vesselId: v.optional(v.id('vessels')), // per-vessel entitlement (e.g. a Sunset boat)
     sector: v.optional(
       v.union(
         v.literal('traditional_inhabitant'),
