@@ -1,0 +1,23 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "torres-strait-afma",
+	"main": "src/worker.ts",
+	"compatibility_date": "2026-05-08",
+	// `nodejs_compat` gives us Node built-ins (crypto, etc.) that Convex +
+	// Better Auth rely on, AND — with this compat date — populates `process.env`
+	// from the `vars`/secrets below, which is how the server code reads config
+	// at runtime (see src/library/auth-server.ts).
+	"compatibility_flags": ["nodejs_compat"],
+
+	"observability": { "enabled": true },
+
+	// Public Convex endpoints the server entry needs at runtime. These are not
+	// secrets (they're the same URLs the browser hits), so they live here rather
+	// than in `wrangler secret`. Point them at whichever Convex deployment this
+	// Worker should talk to. The `VITE_`-prefixed names match what the code
+	// already reads (src/library/auth-server.ts, convex-client.ts).
+	"vars": {
+		"VITE_CONVEX_URL": "https://hidden-pheasant-120.convex.cloud",
+		"VITE_CONVEX_SITE_URL": "https://hidden-pheasant-120.convex.site"
+	}
+}

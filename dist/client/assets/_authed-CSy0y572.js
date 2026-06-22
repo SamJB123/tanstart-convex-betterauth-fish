@@ -1,0 +1,1 @@
+import{D as e,s as t}from"./main-BE5GlHhk.js";var n=()=>e(t,{});export{n as component};

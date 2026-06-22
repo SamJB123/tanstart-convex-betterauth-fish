@@ -10,13 +10,22 @@
 
 import type * as auth from "../auth.js";
 import type * as catch_tables from "../catch/tables.js";
+import type * as email from "../email.js";
 import type * as geospatial from "../geospatial.js";
+import type * as governance_consent from "../governance/consent.js";
+import type * as governance_consentSmoke from "../governance/consentSmoke.js";
 import type * as governance_tables from "../governance/tables.js";
 import type * as http from "../http.js";
+import type * as identity_fishers from "../identity/fishers.js";
 import type * as identity_model from "../identity/model.js";
+import type * as identity_orgMirror from "../identity/orgMirror.js";
+import type * as identity_orgMirrorSmoke from "../identity/orgMirrorSmoke.js";
 import type * as identity_tables from "../identity/tables.js";
 import type * as identity_users from "../identity/users.js";
 import type * as licensing_applications from "../licensing/applications.js";
+import type * as licensing_applicationsSmoke from "../licensing/applicationsSmoke.js";
+import type * as licensing_attestation from "../licensing/attestation.js";
+import type * as licensing_attestationSmoke from "../licensing/attestationSmoke.js";
 import type * as licensing_tables from "../licensing/tables.js";
 import type * as myFunctions from "../myFunctions.js";
 import type * as quota_aggregate from "../quota/aggregate.js";
@@ -40,13 +49,22 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   "catch/tables": typeof catch_tables;
+  email: typeof email;
   geospatial: typeof geospatial;
+  "governance/consent": typeof governance_consent;
+  "governance/consentSmoke": typeof governance_consentSmoke;
   "governance/tables": typeof governance_tables;
   http: typeof http;
+  "identity/fishers": typeof identity_fishers;
   "identity/model": typeof identity_model;
+  "identity/orgMirror": typeof identity_orgMirror;
+  "identity/orgMirrorSmoke": typeof identity_orgMirrorSmoke;
   "identity/tables": typeof identity_tables;
   "identity/users": typeof identity_users;
   "licensing/applications": typeof licensing_applications;
+  "licensing/applicationsSmoke": typeof licensing_applicationsSmoke;
+  "licensing/attestation": typeof licensing_attestation;
+  "licensing/attestationSmoke": typeof licensing_attestationSmoke;
   "licensing/tables": typeof licensing_tables;
   myFunctions: typeof myFunctions;
   "quota/aggregate": typeof quota_aggregate;
@@ -89,7 +107,8 @@ export declare const internal: FilterApi<
 >;
 
 export declare const components: {
-  betterAuth: import("@convex-dev/better-auth/_generated/component.js").ComponentApi<"betterAuth">;
+  betterAuth: import("../betterAuth/_generated/component.js").ComponentApi<"betterAuth">;
   geospatial: import("@convex-dev/geospatial/_generated/component.js").ComponentApi<"geospatial">;
   quotaLedger: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"quotaLedger">;
+  resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
 };

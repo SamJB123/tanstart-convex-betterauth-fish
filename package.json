@@ -6,16 +6,21 @@
   "scripts": {
     "dev": "vite dev",
     "convex:dev": "convex dev",
-    "build": "echo 'Skipped: waiting for dependency Solid 2.0 support' && exit 0",
+    "build": "vite build",
+    "deploy": "vite build && wrangler deploy",
+    "cf-typegen": "wrangler types",
     "preview": "vite preview",
     "start": "pnpx srvx --prod -s ../client dist/server/server.js"
   },
   "dependencies": {
+    "@cloudflare/vite-plugin": "^1.42.0",
     "@convex-dev/aggregate": "^0.2.1",
     "@convex-dev/better-auth": "^0.12.2",
     "@convex-dev/geospatial": "^0.2.1",
+    "@convex-dev/resend": "^0.2.5",
     "@solidjs/web": "2.0.0-beta.14",
     "@tailwindcss/vite": "^4.2.2",
+    "@tanstack/db": "^0.6.9",
     "@tanstack/solid-router": "^2.0.0-beta.18",
     "@tanstack/solid-router-devtools": "^2.0.0-beta.14",
     "@tanstack/solid-start": "^2.0.0-beta.19",
@@ -27,9 +32,10 @@
     "solid-js": "2.0.0-beta.14",
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "^4.2.2",
-    "zod": "^3.24.2"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260619.1",
     "@edge-runtime/vm": "^5.0.0",
     "@types/node": "^22.10.2",
     "combinate": "^1.1.11",
@@ -38,6 +44,7 @@
     "vite": "^8.0.0",
     "vite-plugin-solid": "^3.0.0-next.5",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.9",
+    "wrangler": "^4.102.0"
   }
 }

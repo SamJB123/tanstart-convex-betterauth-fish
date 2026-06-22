@@ -1,6 +1,7 @@
 import { defineTable } from 'convex/server'
 import { v } from 'convex/values'
 import { channel, governanceFields, syncFields } from '../shared/validators'
+import { delegateRelationship } from '../governance/tables'
 
 // LICENSING & PERMITS.
 // The paper -> digital target. Validated against the Torres Strait Fisheries Act
@@ -24,6 +25,20 @@ const holderType = v.union(
   v.literal('individual'),
   v.literal('group'), // a group representing traditional inhabitants
   v.literal('agency'),
+)
+
+// The three eligibility criteria from the real Traditional Inhabitant
+// Identification Form (PZJA; see docs/validation-findings.md §2.1).
+export const tiCriterion = v.union(
+  v.literal('tsi_resident_citizen'), // (a) TSI resident + Australian citizen
+  v.literal('aboriginal_ts_npa'), // (b) Aboriginal traditional inhabitant of TS/NPA
+  v.literal('png_amnesty_or_descendant'), // (c) PNG amnesty-list citizen, or descendant
+)
+// The Mayor must independently know the applicant OR have sighted evidence —
+// they cannot rely solely on the Councillor's declaration (form rule).
+export const mayorBasis = v.union(
+  v.literal('known_n_years'),
+  v.literal('sighted_documentation'),
 )
 
 export const licensingTables = {
@@ -84,6 +99,15 @@ export const licensingTables = {
     ),
     attachmentStorageIds: v.optional(v.array(v.id('_storage'))),
     audioStorageId: v.optional(v.id('_storage')), // voice-assisted application
+    // ── On-behalf-of (assisted lodging) ──
+    // The applicant is the FISHER's party (applicantPartyId above); when a
+    // delegate lodges, they're recorded here. Gated on the fisher's confirmed
+    // consent (see applications.ts).
+    lodgedByUserId: v.optional(v.id('users')),
+    lodgedByPartyId: v.optional(v.id('parties')),
+    lodgedByRelationship: v.optional(delegateRelationship),
+    // Link to the structured Traditional Inhabitant Identification (eligibility).
+    tiVerificationId: v.optional(v.id('traditionalInhabitantVerifications')),
     submittedAt: v.optional(v.number()),
     decisionAt: v.optional(v.number()),
     decidedByUserId: v.optional(v.id('users')),
@@ -92,6 +116,64 @@ export const licensingTables = {
   })
     .index('by_applicant', ['applicantPartyId'])
     .index('by_status', ['status'])
+    .index('by_clientId', ['clientId'])
+    .index('by_lodgedBy', ['lodgedByUserId']),
+
+  // Traditional Inhabitant Identification — the structured form a FIRST-TIME TIB
+  // applicant lodges to be recognised as a Traditional Inhabitant. Modelled 1:1
+  // on the real PZJA ID Form (docs/validation-findings.md §2.1): two declarations
+  // (Councillor + Mayor of the SAME Council), one of three criteria, conditional
+  // evidence. A precondition to the licence application. RESTRICTED data.
+  traditionalInhabitantVerifications: defineTable({
+    applicantPartyId: v.id('parties'),
+    applicationId: v.optional(v.id('applications')),
+    // Applicant block (mirrors the form).
+    placeOfBirth: v.optional(v.string()),
+    dateOfBirth: v.optional(v.string()), // ISO date
+    postalAddress: v.optional(v.string()),
+    residentialAddress: v.optional(v.string()), // must be non-PO-box (UI-validated)
+    criterion: tiCriterion,
+    isDescendant: v.optional(v.boolean()), // criterion (c) descendant sub-path
+    // First identifying person — Councillor.
+    councillor: v.optional(
+      v.object({
+        name: v.string(),
+        council: v.string(),
+        yearsKnown: v.optional(v.number()),
+        signedAt: v.optional(v.number()),
+      }),
+    ),
+    // Second identifying person — Mayor (must be the SAME Council; enforced in code).
+    mayor: v.optional(
+      v.object({
+        name: v.string(),
+        council: v.string(),
+        basis: mayorBasis,
+        yearsKnown: v.optional(v.number()),
+        signedAt: v.optional(v.number()),
+      }),
+    ),
+    // Evidence + the signed form, in native Convex _storage.
+    attestationStorageId: v.optional(v.id('_storage')), // photo of the signed ID form
+    familyTreeStorageId: v.optional(v.id('_storage')), // (a)/(b): may be requested
+    residencyEvidenceStorageId: v.optional(v.id('_storage')),
+    homeAffairsLetterStorageId: v.optional(v.id('_storage')), // (c): REQUIRED
+    birthCertificateStorageId: v.optional(v.id('_storage')), // (c) descendant: REQUIRED
+    // Declarations (s.136.1 Criminal Code truthfulness on the real form).
+    applicantDeclarationAccepted: v.optional(v.boolean()),
+    // attested = both signatories done; pending_pzja = lodged; PZJA decides.
+    status: v.union(
+      v.literal('draft'),
+      v.literal('attested'),
+      v.literal('pending_pzja'),
+      v.literal('approved'),
+      v.literal('rejected'),
+    ),
+    ...syncFields,
+    ...governanceFields,
+  })
+    .index('by_applicant', ['applicantPartyId'])
+    .index('by_application', ['applicationId'])
     .index('by_clientId', ['clientId']),
 
   // The issued licence/permit.

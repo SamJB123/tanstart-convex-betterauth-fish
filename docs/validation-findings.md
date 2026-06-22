@@ -51,6 +51,49 @@ prawn by-product weight TAC layered on effort; PPSA security interests over unit
 BDM/trochus/pearl); s.20 Treaty (PNG) endorsement; s.12 scientific/developmental
 permit.
 
+### 2.1 Eligibility attestation — the TI Identification Form (CONFIRMED, primary-source)
+
+*Research pass 2026-06-22, verbatim from the PZJA forms (text extracted locally
+from the PDFs, not search snippets).*
+
+- **Two-form workflow.** A TIB applicant lodges (1) the **Application for Grant or
+  Variation of a Traditional Inhabitant Fishing Boat Licence** (every applicant)
+  and (2) the **Traditional Inhabitant Identification Form** (**first-time
+  applicants only**). Both head *"Return to: PZJA c/- AFMA"* — direct textual
+  confirmation of **PZJA-issues / AFMA-administers** (keep our schema).
+  Statutory basis printed on the application: **TSFA 1984 s.19(2), 21(1), 24, 25A**
+  — confirms TIB = s.19(2) boat licence + s.21 fishery *entries* (Schedule 2:
+  TRL, Pearl Shell, Reef Line, Trochus, Spanish Mackerel, Bêche-de-mer, Crab).
+- **The attestation is real, not an assumption.** The ID Form carries **two
+  declarations — a Councillor and a Mayor of the *same* Council** (Torres Strait
+  Island Regional / Torres Shire / Northern Peninsula Area). Each independently
+  ticks one of **three criteria**: (a) TSI resident + Australian citizen with
+  customary association; (b) Aboriginal traditional inhabitant of TS/NPA (Treaty);
+  (c) PNG traditional inhabitant now an Australian citizen via the 1978/79 amnesty
+  list (or a descendant). The form **prohibits the Mayor from relying solely on the
+  Councillor** — independent knowledge or sighted evidence is required.
+- **Conditional evidence.** Criteria (a)/(b): family tree / residency evidence *may*
+  be requested. Criterion (c): a Home Affairs letter is **mandatory** (+ parent's
+  letter & birth certificate for a descendant). PZJA retains an explicit
+  **override/discretion** clause ("may also utilise other information").
+- **→ Model:** a structured **`traditionalInhabitantVerification`** record (a
+  first-application precondition, distinct from the licence application), mirroring
+  the paper form: applicant block, single-select `criterion`, Councillor block,
+  Mayor block (with **same-Council hard validation** + independent-basis enum),
+  conditional evidence attachments, and the s.136.1 Criminal-Code truthfulness
+  declarations. Photo-of-signed-form is an **attached artifact** on this record,
+  not the primary representation. Status flows `attested → pending PZJA
+  determination → approved`.
+- **needs-AFMA:** (1) is the attestation *statutory* or *PZJA administrative
+  policy*? (the form attributes status partly to "decisions of the PZJA"); (2) are
+  **e-signatures** accepted in place of wet-ink Councillor/Mayor signatures, and via
+  what channel (GoFish / ebusiness.afma.gov.au)?; (3) the **no-attestor / disputed
+  status** fallback; (4) re-verification triggers on renewal/transfer.
+
+Sources: PZJA *Traditional Inhabitant Identification Verification* and *TIB Licence*
+pages; `tib-application.pdf`; `torres-strait-trad-inhabitant-id.pdf` (PZJA Licencing
+Forms, 2023). Full citation list in the research record.
+
 ---
 
 ## 3. Native title (Hybrid model)
@@ -372,3 +415,36 @@ Dugong Sanctuary is seeded as a `closure_area` zone + a permanent `zoneStatus` c
 here + in the source PDFs (no structured home in the prototype schema). The only
 non-statutory layer is the voluntary community Dugong/Turtle Management Plans, which
 operate *under* these FMNs.
+
+### Consent & Indigenous data governance (CARE / NIAA) — research & design (2026-06-22)
+Grounding for the assisted-application **consent flow** (a delegate may *start* an
+application for a fisher; the fisher must *personally* confirm). Sources: GIDA **CARE
+Principles**; NIAA **Framework for Governance of Indigenous Data (GID, May 2024)** —
+APS implementation from Jan 2025; **AIATSIS Code of Ethics (2020)**; **Maiam nayri
+Wingara** IDSov principles.
+
+**Design rules adopted (non-negotiable):**
+- **Two granular consents**, independently revocable: *(a) delegate authority* and
+  *(b) Indigenous-data use*. Never bundled into one checkbox.
+- **State machine** `pending → confirmed → revoked` (`declined`/`expired` terminal).
+  A delegate-created grant is `pending` and has **zero data effect**; every data-use
+  path must guard on a **`confirmed` `data_use`** grant — never a `pending` one.
+- **Append-only `dataAccessLog`/audit** (insert-only mutations; no update/delete)
+  powering the NIAA-G3 **"what's held about me & who accessed it"** transparency view.
+- **Informed = comprehensible:** plain English **+ Yumplatok audio + "talk to
+  someone"** on every consent screen; persist `consentTextVersion`, `languageShown`,
+  `confirmedVia` as evidence. Confirmation is via the fisher's **own** authenticated
+  account (Better Auth).
+- Defaults: **data minimisation**, `allowsSecondaryUse: false` (fresh consent for any
+  new purpose), revocation as easy as granting and **immediately enforcing** with
+  consequences explained (AIATSIS).
+- **Pitfalls to avoid:** treating the delegate's action as consent; text-only English;
+  bundled consent; one-and-done (non-revisitable) consent; hidden/punitive revocation;
+  silent secondary use; a mutable audit log.
+
+**→ Model:** extend `governance` with `consentGrant` (fisherId, delegateId,
+consentType, purposeId, scope, status, requested/confirmed/revoked timestamps,
+confirmedVia, languageShown, consentTextVersion, expiresAt) and a `purpose` reference
+table; keep `dataAccessLog` append-only. **needs-AFMA:** confirm AFMA's own GID
+implementation stance + whether community-level (collective) consent is required
+alongside individual consent for any data category.

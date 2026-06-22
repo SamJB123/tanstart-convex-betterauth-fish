@@ -55,7 +55,11 @@ export const identityTables = {
     contactEmail: v.optional(v.string()),
     contactPhone: v.optional(v.string()),
     ...governanceFields,
-  }).index('by_kind', ['kind']),
+  })
+    .index('by_kind', ['kind'])
+    // Lets a claiming fisher's new account link to the party a delegate
+    // pre-staged for them (matched by email) — see ensureAppUser.
+    .index('by_contactEmail', ['contactEmail']),
 
   // Torres Strait island communities / native-title groups (PBC/RNTBC).
   // Mirrors Better Auth organization-plugin organizations via `orgId`.

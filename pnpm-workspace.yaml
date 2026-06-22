@@ -1,2 +1,7 @@
+# pnpm v11 build-script policy lives here. `workerd` (the Cloudflare runtime
+# binary) and `esbuild` ship native binaries the toolchain needs, so their
+# install scripts are allowed; `sharp` (an optional image dep) is skipped.
 allowBuilds:
   esbuild: true
+  workerd: true
+  sharp: false

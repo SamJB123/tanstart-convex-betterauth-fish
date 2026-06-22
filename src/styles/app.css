@@ -1,17 +1,1033 @@
 @import 'tailwindcss' source('../');
 
+/* ════════════════════════════════════════════════════════════════════════════
+   TIDE — the AFMA Torres Strait design system
+   ────────────────────────────────────────────────────────────────────────────
+   One stylesheet (loaded as a static <link> in __root.tsx — see
+   SOLID_V2_MIGRATION.md §5). Three layers:
+
+     1. Tokens        — colour + type + shape, as `--c-*` / `--font-*` / `--r-*`
+                        custom properties on :root. Runtime-overridable, so a
+                        future co-design theme editor can repaint the whole app
+                        from one inline style block (the playground pattern).
+     2. Base          — a mobile-first reset: 100dvh frame, safe-area awareness,
+                        sunlight-readable defaults, momentum scrolling.
+     3. Components     — structural classes for the modern-CSS-heavy primitives
+        (`tide-*`)       (bottom sheet, accordion, segmented, choice cards,
+                        progress, scroll-driven reveal). Everything Chromium-
+                        first is wrapped in @supports and degrades to a calm
+                        static state — essential for the old Android devices
+                        common across the Torres Strait.
+
+   DESIGN STANCE (and a deliberate divergence from solid-playground):
+   this theme is LIGHT and HIGH-CONTRAST, not dark/editorial. Torres Strait
+   fishers use their phones outdoors in bright sun; legibility under glare is a
+   digital-inclusion requirement, so we optimise for it.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+	color-scheme: light;
+
+	/* ── Surfaces (warm sand → white) ───────────────────────────────────────── */
+	--c-bg: #f4efe4; /* app background — warm sand */
+	--c-bg-2: #ece5d6; /* recessed wells, scrubbed areas */
+	--c-surface: #fffdf8; /* cards, sheets — near-white, warm */
+	--c-surface-2: #f6f1e6; /* nested surfaces, input fills */
+
+	/* ── Ink (deep ocean, not pure black — softer under glare) ───────────────── */
+	--c-ink: #0d2530; /* primary text */
+	--c-muted: #4a5b60; /* secondary text */
+	--c-faint: #7c8a8c; /* tertiary / placeholder */
+
+	/* ── Brand: the sea, the reef, the sunrise ──────────────────────────────── */
+	--c-sea: #0a6c74; /* primary — deep Torres Strait teal */
+	--c-sea-deep: #074f56; /* pressed / strong */
+	--c-sea-soft: color-mix(in oklab, var(--c-sea) 12%, transparent);
+	--c-on-sea: #f3fbfb; /* text on sea */
+
+	--c-coral: #d6573a; /* accent — sunrise coral */
+	--c-coral-soft: color-mix(in oklab, var(--c-coral) 13%, transparent);
+	--c-on-coral: #fff6f2;
+
+	/* ── Semantic status ────────────────────────────────────────────────────── */
+	--c-reef: #2f8f5b; /* success — mangrove green */
+	--c-sun: #c07c12; /* warning / caution */
+	--c-ember: #c23a2b; /* danger / error */
+	--c-info: var(--c-sea);
+	--c-live: #2f8f5b; /* "live"/syncing dot */
+
+	/* ── Lines, derived from ink so a single ink change ripples out ─────────── */
+	--c-line: color-mix(in oklab, var(--c-ink) 12%, transparent);
+	--c-line-strong: color-mix(in oklab, var(--c-ink) 22%, transparent);
+
+	/* ── Focus — a high-visibility ring (accessibility, not decoration) ──────── */
+	--c-focus: #1f7fd6;
+
+	/* ── Type ────────────────────────────────────────────────────────────────
+	   Two web families (variable, display=swap, system fallbacks so offline
+	   still looks right); data/figures use the system mono — no third fetch. */
+	--font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+	--font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+	--font-data: ui-monospace, 'SF Mono', 'Menlo', 'Consolas', monospace;
+
+	/* ── Shape ───────────────────────────────────────────────────────────────── */
+	--r-sm: 10px;
+	--r-md: 14px;
+	--r-lg: 18px;
+	--r-xl: 24px;
+	--r-pill: 999px;
+
+	/* ── Elevation ───────────────────────────────────────────────────────────── */
+	--shadow-1: 0 1px 2px rgb(13 37 48 / 0.06), 0 1px 3px rgb(13 37 48 / 0.05);
+	--shadow-2: 0 4px 12px -4px rgb(13 37 48 / 0.12), 0 2px 6px -3px rgb(13 37 48 / 0.08);
+	--shadow-3: 0 18px 44px -16px rgb(13 37 48 / 0.28), 0 6px 16px -10px rgb(13 37 48 / 0.18);
+
+	/* ── Touch ───────────────────────────────────────────────────────────────
+	   48px is the comfortable thumb target; we keep controls at or above it. */
+	--tap: 48px;
+
+	/* opt in so accordions / disclosures can animate to height:auto */
+	interpolate-size: allow-keywords;
+}
+
+/* ════════════════════ Base ════════════════════ */
+
+* {
+	min-width: 0; /* flex/grid children may shrink below content */
+}
+
+html {
+	height: 100%;
+	-webkit-text-size-adjust: 100%; /* don't let mobile Safari inflate text */
+	text-size-adjust: 100%;
+}
+
 body {
-  font-family:
-    Gordita, Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue',
-    sans-serif;
+	margin: 0;
+	min-height: 100%;
+	background: var(--c-bg);
+	color: var(--c-ink);
+	font-family: var(--font-sans);
+	font-size: 16px; /* never below 16px on mobile (prevents iOS zoom-on-focus) */
+	line-height: 1.5;
+	letter-spacing: -0.006em;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+	/* iOS rubber-band: keep the app frame from bouncing the whole page */
+	overscroll-behavior-y: none;
 }
 
+/* The template set body{font-family}, a{margin-right}, main{text-align:center}.
+   Those global element rules fight a real layout, so we reset them here — our
+   components own their own spacing. */
 a {
-  margin-right: 1rem;
+	color: inherit;
+	text-decoration: none;
+}
+main {
+	text-align: start;
+	padding: 0;
+	margin: 0;
 }
 
-main {
-  text-align: center;
-  padding: 1em;
-  margin: 0 auto;
+h1, h2, h3, h4 {
+	margin: 0;
+	font-weight: 600;
+	text-wrap: balance; /* even heading line lengths (Baseline) */
+}
+p {
+	margin: 0;
+	text-wrap: pretty; /* avoid orphans in body copy */
+}
+
+/* Sunlight-readable, accessible focus. Only show the ring for keyboard users. */
+:focus-visible {
+	outline: 3px solid var(--c-focus);
+	outline-offset: 2px;
+	border-radius: 4px;
+}
+:focus:not(:focus-visible) {
+	outline: none;
+}
+
+::selection {
+	background: var(--c-sea);
+	color: var(--c-on-sea);
+}
+
+/* Font-role helpers (the JSX uses these; they read the runtime-overridable vars). */
+.font-display {
+	font-family: var(--font-display);
+	font-optical-sizing: auto;
+}
+.font-data {
+	font-family: var(--font-data);
+	font-feature-settings: 'tnum' 1; /* tabular figures for data */
+}
+
+/* ── Safe area + dynamic viewport helpers ───────────────────────────────────
+   iOS/Android notches and home indicators. `dvh` tracks the real visible
+   height as browser chrome shows/hides — critical for a bottom action bar. */
+.tide-dvh {
+	min-height: 100dvh;
+}
+.tide-safe-top {
+	padding-top: env(safe-area-inset-top, 0px);
+}
+.tide-safe-bottom {
+	padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.tide-safe-x {
+	padding-left: env(safe-area-inset-left, 0px);
+	padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Smooth, contained momentum scrolling for inner scroll regions. */
+.tide-scroll {
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	overscroll-behavior: contain;
+	scrollbar-width: thin;
+	scrollbar-color: var(--c-line-strong) transparent;
+}
+.tide-scroll::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+.tide-scroll::-webkit-scrollbar-thumb {
+	background: var(--c-line-strong);
+	border-radius: 3px;
+}
+
+/* Tactile press feedback — a tiny scale on active, the mobile "tap" affordance. */
+.tide-press {
+	transition: transform 0.12s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+	-webkit-tap-highlight-color: transparent;
+	touch-action: manipulation; /* removes the 300ms tap delay */
+}
+.tide-press:active {
+	transform: scale(0.975);
+}
+
+/* ════════════════════ Motion ════════════════════ */
+
+@keyframes tide-rise {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+@keyframes tide-in {
+	from {
+		opacity: 0;
+		transform: translateY(-6px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+.tide-rise {
+	animation: tide-rise 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.tide-in {
+	animation: tide-in 0.32s ease both;
+}
+
+/* Scroll-driven reveal — content fades up as it enters the viewport, off the
+   main thread. Pure enhancement; static where unsupported (Interop 2026). */
+.tide-reveal {
+	animation: tide-rise linear both;
+	animation-timeline: view();
+	animation-range: entry 2% cover 22%;
+}
+@supports not (animation-timeline: view()) {
+	.tide-reveal {
+		animation: none;
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* ════════════════════ App shell ════════════════════ */
+
+/* Sticky top bar that gains elevation as the body scrolls beneath it
+   (scroll-driven animation; degrades to a permanent subtle border). */
+.tide-appbar {
+	position: sticky;
+	top: 0;
+	z-index: 30;
+	background: color-mix(in oklab, var(--c-surface) 86%, transparent);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	border-bottom: 1px solid transparent;
+	animation: tide-appbar-elevate linear both;
+	animation-timeline: scroll(nearest block);
+	animation-range: 0 64px;
+}
+@keyframes tide-appbar-elevate {
+	to {
+		background: color-mix(in oklab, var(--c-surface) 94%, transparent);
+		border-bottom-color: var(--c-line);
+		box-shadow: var(--shadow-1);
+	}
+}
+@supports not (animation-timeline: scroll()) {
+	.tide-appbar {
+		border-bottom-color: var(--c-line);
+	}
+}
+
+/* Thumb-reach bottom action bar — sticky, safe-area padded, lifted surface. */
+.tide-bottombar {
+	position: sticky;
+	bottom: 0;
+	z-index: 20;
+	background: color-mix(in oklab, var(--c-surface) 92%, transparent);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	border-top: 1px solid var(--c-line);
+	padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.5rem);
+}
+
+/* ════════════════════ Bottom sheet (mobile-native modal) ════════════════════
+   Built on a real <dialog> (showModal): focus trap, inert background, and Esc
+   for free — the accessible foundation. It slides up from the bottom and is the
+   touch-first replacement for hover popovers. @starting-style + allow-discrete
+   animate it without JS timers; degrades to an instant show/hide. */
+.tide-sheet {
+	width: 100%;
+	max-width: 640px;
+	margin: auto auto 0; /* pinned to the bottom, centred on tablet */
+	padding: 0;
+	border: 0;
+	max-height: 92dvh;
+	background: var(--c-surface);
+	color: var(--c-ink);
+	border-radius: var(--r-xl) var(--r-xl) 0 0;
+	box-shadow: var(--shadow-3);
+	overflow: clip;
+	transition:
+		transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1),
+		opacity 0.32s,
+		overlay 0.32s allow-discrete,
+		display 0.32s allow-discrete;
+	transform: translateY(100%);
+	opacity: 0;
+}
+.tide-sheet[open] {
+	transform: none;
+	opacity: 1;
+}
+@starting-style {
+	.tide-sheet[open] {
+		transform: translateY(100%);
+		opacity: 0;
+	}
+}
+.tide-sheet::backdrop {
+	background: rgb(8 24 31 / 0);
+	backdrop-filter: blur(0px);
+	transition:
+		background 0.32s,
+		backdrop-filter 0.32s,
+		overlay 0.32s allow-discrete,
+		display 0.32s allow-discrete;
+}
+.tide-sheet[open]::backdrop {
+	background: rgb(8 24 31 / 0.42);
+	backdrop-filter: blur(2px);
+}
+@starting-style {
+	.tide-sheet[open]::backdrop {
+		background: rgb(8 24 31 / 0);
+		backdrop-filter: blur(0px);
+	}
+}
+/* Centre dialog variant (confirmations) — same machinery, centred + smaller. */
+.tide-sheet.tide-sheet-center {
+	margin: auto;
+	max-width: 420px;
+	border-radius: var(--r-lg);
+	transform: translateY(12px) scale(0.98);
+}
+.tide-sheet.tide-sheet-center[open] {
+	transform: none;
+}
+@starting-style {
+	.tide-sheet.tide-sheet-center[open] {
+		transform: translateY(12px) scale(0.98);
+	}
+}
+/* The drag grabber — a visual affordance that the sheet is dismissible. */
+.tide-grabber {
+	width: 38px;
+	height: 4px;
+	border-radius: var(--r-pill);
+	background: var(--c-line-strong);
+	margin: 10px auto 2px;
+}
+
+/* ════════════════════ Choice cards (big-tap-target radio/checkbox) ════════════
+   A label wrapping a visually-hidden native input — full keyboard + AT + form
+   semantics retained, but a generous, finger-friendly card surface. The checked
+   state is driven by :has(:checked) (Baseline). This is the mobile-first star:
+   the way you pick a licence type, a sector, a fishery. */
+.tide-choice {
+	position: relative;
+	display: flex;
+	gap: 0.75rem;
+	align-items: center;
+	min-height: var(--tap);
+	padding: 0.9rem 1rem;
+	border-radius: var(--r-md);
+	background: var(--c-surface);
+	box-shadow: inset 0 0 0 1.5px var(--c-line);
+	cursor: pointer;
+	transition: box-shadow 0.15s ease, background 0.15s ease, transform 0.12s ease;
+	-webkit-tap-highlight-color: transparent;
+	touch-action: manipulation;
+}
+.tide-choice:active {
+	transform: scale(0.99);
+}
+.tide-choice:has(input:focus-visible) {
+	outline: 3px solid var(--c-focus);
+	outline-offset: 2px;
+}
+.tide-choice:has(input:checked) {
+	background: var(--c-sea-soft);
+	box-shadow: inset 0 0 0 2px var(--c-sea);
+}
+.tide-choice input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+	pointer-events: none;
+}
+/* The check/tick indicator (circle for radio, rounded-square for checkbox). */
+.tide-choice-mark {
+	flex: none;
+	display: grid;
+	place-items: center;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	box-shadow: inset 0 0 0 2px var(--c-line-strong);
+	color: var(--c-on-sea);
+	transition: box-shadow 0.15s ease, background 0.15s ease;
+}
+.tide-choice-mark.is-checkbox {
+	border-radius: 8px;
+}
+.tide-choice-mark > svg {
+	opacity: 0;
+	transform: scale(0.5);
+	transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.tide-choice:has(input:checked) .tide-choice-mark {
+	background: var(--c-sea);
+	box-shadow: inset 0 0 0 2px var(--c-sea);
+}
+.tide-choice:has(input:checked) .tide-choice-mark > svg {
+	opacity: 1;
+	transform: none;
+}
+
+/* ════════════════════ Segmented control ════════════════════
+   A small, touch-sized tab switcher with a sliding indicator. */
+.tide-segmented {
+	position: relative;
+	display: inline-grid;
+	grid-auto-flow: column;
+	grid-auto-columns: 1fr;
+	gap: 2px;
+	padding: 4px;
+	border-radius: var(--r-pill);
+	background: var(--c-bg-2);
+	box-shadow: inset 0 0 0 1px var(--c-line);
+}
+.tide-seg-btn {
+	position: relative;
+	z-index: 1;
+	min-height: 40px;
+	padding: 0 1rem;
+	border-radius: var(--r-pill);
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--c-muted);
+	white-space: nowrap;
+	transition: color 0.2s ease;
+	-webkit-tap-highlight-color: transparent;
+	touch-action: manipulation;
+}
+.tide-seg-btn[aria-selected='true'] {
+	color: var(--c-ink);
+}
+.tide-seg-indicator {
+	position: absolute;
+	z-index: 0;
+	top: 4px;
+	bottom: 4px;
+	border-radius: var(--r-pill);
+	background: var(--c-surface);
+	box-shadow: var(--shadow-1);
+	transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1), width 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ════════════════════ Accordion / disclosure ════════════════════
+   Native <details> that animates open via interpolate-size + ::details-content.
+   Used for inline "what does this mean?" help. Degrades to instant toggle. */
+.tide-accordion {
+	border-radius: var(--r-md);
+	background: var(--c-surface);
+	box-shadow: inset 0 0 0 1px var(--c-line);
+	overflow: clip;
+}
+.tide-accordion summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	min-height: var(--tap);
+	padding: 0.75rem 1rem;
+	font-weight: 500;
+	cursor: pointer;
+	list-style: none;
+	-webkit-tap-highlight-color: transparent;
+}
+.tide-accordion summary::-webkit-details-marker {
+	display: none;
+}
+.tide-accordion summary .tide-accordion-chev {
+	flex: none;
+	color: var(--c-faint);
+	transition: transform 0.3s ease;
+}
+.tide-accordion[open] summary .tide-accordion-chev {
+	transform: rotate(180deg);
+}
+.tide-accordion-body {
+	padding: 0 1rem 1rem;
+	color: var(--c-muted);
+	line-height: 1.6;
+}
+.tide-accordion::details-content {
+	height: 0;
+	overflow: clip;
+	transition: height 0.3s ease, content-visibility 0.3s allow-discrete;
+}
+.tide-accordion[open]::details-content {
+	height: auto;
+}
+@supports (height: calc-size(auto, size)) {
+	.tide-accordion[open]::details-content {
+		height: calc-size(auto, size);
+	}
+}
+
+/* ════════════════════ Progress (stepper + bars) ════════════════════ */
+@property --tide-fill {
+	syntax: '<length-percentage>';
+	inherits: false;
+	initial-value: 0%;
+}
+.tide-progress {
+	position: relative;
+	height: 8px;
+	border-radius: var(--r-pill);
+	background: var(--c-bg-2);
+	overflow: hidden;
+	box-shadow: inset 0 0 0 1px var(--c-line);
+}
+.tide-progress-fill {
+	height: 100%;
+	border-radius: inherit;
+	background: linear-gradient(90deg, var(--c-sea), var(--c-sea-deep));
+	width: var(--tide-w, 0%);
+	transition: width 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+/* relative-color shade pair where supported, for a touch more depth */
+@supports (color: oklch(from red l c h)) {
+	.tide-progress-fill {
+		background: linear-gradient(
+			90deg,
+			oklch(from var(--c-sea) calc(l + 0.05) c h),
+			oklch(from var(--c-sea) calc(l - 0.04) c h)
+		);
+	}
+}
+
+/* ════════════════════ Customizable native <select> ════════════════════
+   Opt the real <select> into a styleable rendering where supported (keeping
+   full native a11y + form semantics); a plain styled select everywhere else. */
+.tide-select {
+	font: inherit;
+	min-height: var(--tap);
+	padding: 0 2.5rem 0 1rem;
+	border-radius: var(--r-md);
+	background: var(--c-surface-2);
+	color: var(--c-ink);
+	box-shadow: inset 0 0 0 1.5px var(--c-line);
+	cursor: pointer;
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%237c8a8c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 0.9rem center;
+}
+@supports (appearance: base-select) {
+	.tide-select,
+	.tide-select::picker(select) {
+		appearance: base-select;
+	}
+	.tide-select {
+		display: inline-flex;
+		align-items: center;
+		background-image: none;
+		padding-right: 1rem;
+	}
+	.tide-select::picker(select) {
+		margin-top: 6px;
+		padding: 6px;
+		border: 0;
+		border-radius: var(--r-md);
+		background: var(--c-surface);
+		box-shadow: var(--shadow-3);
+		opacity: 0;
+		transform: translateY(-6px);
+		transition: opacity 0.18s, transform 0.18s, overlay 0.18s allow-discrete, display 0.18s allow-discrete;
+	}
+	.tide-select:open::picker(select) {
+		opacity: 1;
+		transform: none;
+	}
+	@starting-style {
+		.tide-select:open::picker(select) {
+			opacity: 0;
+			transform: translateY(-6px);
+		}
+	}
+	.tide-select option {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		min-height: 44px;
+		padding: 0 0.75rem;
+		border-radius: 8px;
+	}
+	.tide-select option:checked {
+		color: var(--c-sea);
+		font-weight: 600;
+	}
+	.tide-select::picker-icon {
+		color: var(--c-faint);
+		transition: transform 0.2s;
+	}
+	.tide-select:open::picker-icon {
+		transform: rotate(180deg);
+	}
+}
+
+/* ════════════════════ Auto-sizing text inputs ════════════════════ */
+.tide-input {
+	field-sizing: content; /* grows with content where supported; bounded below */
+}
+
+/* ════════════════════ Chips (contrast-aware) ════════════════════
+   A chip sets only --chip-bg; the text picks itself for readability. */
+.tide-chip {
+	--chip-bg: var(--c-bg-2);
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.2rem 0.6rem;
+	border-radius: var(--r-pill);
+	background: var(--chip-bg);
+	color: var(--c-ink);
+	font-size: 0.75rem;
+	font-weight: 600;
+	line-height: 1.4;
+	white-space: nowrap;
+}
+@supports (color: contrast-color(red)) {
+	.tide-chip.tide-chip-solid {
+		color: contrast-color(var(--chip-bg));
+	}
+}
+
+/* ════════════════════ Skeleton (loading) ════════════════════ */
+@keyframes tide-shimmer {
+	to {
+		background-position-x: -200%;
+	}
+}
+.tide-skeleton {
+	background: linear-gradient(
+		90deg,
+		var(--c-bg-2) 0%,
+		color-mix(in oklab, var(--c-bg-2) 60%, var(--c-surface)) 50%,
+		var(--c-bg-2) 100%
+	);
+	background-size: 200% 100%;
+	animation: tide-shimmer 1.4s ease-in-out infinite;
+	border-radius: var(--r-sm);
+}
+
+/* ════════════════════ Carousel (Lab) ════════════════════
+   Swipe rail with browser-generated dots (::scroll-marker) and prev/next
+   buttons (::scroll-button) — accessible, ~JS-free. Degrades to plain scroll. */
+.tide-carousel {
+	position: relative;
+	display: flex;
+	gap: 12px;
+	padding: 2px 2px 6px;
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	scroll-behavior: smooth;
+	scrollbar-width: none;
+	scroll-marker-group: after;
+	-webkit-overflow-scrolling: touch;
+}
+.tide-carousel::-webkit-scrollbar {
+	display: none;
+}
+.tide-slide {
+	position: relative;
+	flex: 0 0 84%;
+	min-height: 168px;
+	scroll-snap-align: center;
+	border-radius: var(--r-lg);
+	overflow: hidden;
+	background: linear-gradient(135deg, var(--from), var(--to));
+	container-type: scroll-state;
+}
+@media (min-width: 520px) {
+	.tide-slide {
+		flex-basis: 46%;
+	}
+}
+.tide-slide-live {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	z-index: 2;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 2px 8px;
+	border-radius: var(--r-pill);
+	background: color-mix(in oklab, var(--c-ink) 52%, transparent);
+	backdrop-filter: blur(6px);
+	color: #fff;
+	font-family: var(--font-data);
+	font-size: 0.625rem;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	opacity: 0;
+	transform: translateY(-3px);
+	transition: opacity 0.25s, transform 0.25s;
+}
+@container scroll-state(snapped: x) {
+	.tide-slide-live {
+		opacity: 1;
+		transform: none;
+	}
+}
+.tide-carousel::scroll-button(left),
+.tide-carousel::scroll-button(right) {
+	position: absolute;
+	top: 40%;
+	z-index: 4;
+	display: grid;
+	place-items: center;
+	width: 36px;
+	height: 36px;
+	border: 1px solid var(--c-line-strong);
+	border-radius: 50%;
+	background: color-mix(in oklab, var(--c-surface) 80%, transparent);
+	color: var(--c-ink);
+	font-size: 17px;
+	cursor: pointer;
+	backdrop-filter: blur(8px);
+}
+.tide-carousel::scroll-button(left) {
+	left: 6px;
+	content: '‹' / 'Previous';
+}
+.tide-carousel::scroll-button(right) {
+	right: 6px;
+	content: '›' / 'Next';
+}
+.tide-carousel::scroll-button(*):disabled {
+	opacity: 0.3;
+	cursor: default;
+}
+.tide-carousel::scroll-marker-group {
+	display: flex;
+	justify-content: center;
+	gap: 8px;
+	margin-top: 12px;
+}
+.tide-slide::scroll-marker {
+	content: '';
+	width: 8px;
+	height: 8px;
+	border: 0;
+	border-radius: 50%;
+	background: var(--c-line-strong);
+	cursor: pointer;
+	transition: width 0.2s, background 0.2s;
+}
+.tide-slide::scroll-marker:target-current {
+	width: 22px;
+	border-radius: var(--r-pill);
+	background: var(--c-sea);
+}
+.tide-carousel-nomarkers {
+	scroll-marker-group: none;
+}
+
+/* ════════════════════ ProgressRing (Lab aurora) ════════════════════ */
+@property --ring-p {
+	syntax: '<percentage>';
+	inherits: false;
+	initial-value: 0%;
+}
+@property --tide-angle {
+	syntax: '<angle>';
+	inherits: false;
+	initial-value: 0deg;
+}
+.tide-ring {
+	display: grid;
+	place-items: center;
+	border-radius: 50%;
+	--ring-thickness: 8px;
+	--ring-color: var(--c-sea);
+	background: conic-gradient(var(--ring-color) 0 var(--ring-p), var(--c-bg-2) var(--ring-p) 100%);
+	transition: --ring-p 0.55s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.tide-ring-hole {
+	display: grid;
+	place-items: center;
+	width: calc(100% - 2 * var(--ring-thickness));
+	height: calc(100% - 2 * var(--ring-thickness));
+	border-radius: 50%;
+	background: var(--c-surface);
+	text-align: center;
+	line-height: 1.1;
+}
+.tide-ring-spin {
+	background: conic-gradient(from var(--tide-angle), transparent 8%, var(--ring-color));
+	animation: tide-ring-spin 1.1s linear infinite;
+}
+@keyframes tide-ring-spin {
+	to {
+		--tide-angle: 360deg;
+	}
+}
+
+/* ════════════════════ EqualizerBars (Lab sibling-index) ════════════════════ */
+.tide-eq {
+	display: flex;
+	align-items: flex-end;
+	gap: 3px;
+}
+.tide-eq-bar {
+	flex: 1;
+	min-width: 2px;
+	height: 22%;
+	border-radius: 2px;
+	background: linear-gradient(var(--eq-color), color-mix(in oklab, var(--eq-color) 28%, transparent));
+	transition: height 0.2s ease;
+}
+.tide-eq.is-active .tide-eq-bar {
+	animation: tide-eq 1s ease-in-out infinite alternate;
+	/* per-bar stagger with zero JS; without sibling-index() they animate in sync */
+	animation-delay: calc(sibling-index() * -70ms);
+}
+@keyframes tide-eq {
+	from {
+		height: 14%;
+	}
+	to {
+		height: 100%;
+	}
+}
+
+/* ════════════════════ QuotaMatrix (Roster) ════════════════════
+   Per-axis sticky + gap decorations. The row-label column stays pinned while
+   the grid scrolls horizontally — the key to reading a wide matrix on a phone. */
+.tide-matrix-frame {
+	overflow-x: auto;
+	overflow-y: clip;
+	border-radius: var(--r-md);
+	box-shadow: inset 0 0 0 1px var(--c-line);
+	background: var(--c-line);
+}
+.tide-matrix-grid {
+	display: grid;
+	grid-template-columns: minmax(136px, 1.5fr) repeat(var(--cols), minmax(58px, 1fr));
+	gap: 1px;
+	min-width: max-content;
+	column-rule: 1px solid var(--c-line);
+	row-rule: 1px solid var(--c-line);
+}
+@supports (column-rule-break: intersection) {
+	.tide-matrix-grid {
+		column-rule-color: var(--c-line-strong);
+		row-rule-color: var(--c-line-strong);
+		column-rule-inset: 6px;
+		row-rule-inset: 6px;
+		column-rule-break: intersection;
+		row-rule-break: intersection;
+	}
+}
+.tide-matrix-corner {
+	position: sticky;
+	top: 0;
+	left: 0;
+	z-index: 5;
+	display: flex;
+	align-items: flex-end;
+	padding: 10px 12px;
+	background: var(--c-surface-2);
+}
+.tide-matrix-colhead {
+	position: sticky;
+	top: 0;
+	z-index: 3;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	padding: 8px 6px;
+	background: var(--c-surface-2);
+	text-align: center;
+}
+.tide-matrix-colhead.is-highlight {
+	background: color-mix(in oklab, var(--c-sea) 12%, var(--c-surface-2));
+}
+.tide-matrix-rowhead {
+	position: sticky;
+	left: 0;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	padding: 10px 12px;
+	background: var(--c-surface);
+}
+.tide-matrix-cell {
+	display: grid;
+	place-items: center;
+	min-height: 46px;
+	padding: 4px;
+	background: var(--c-surface);
+	font-family: var(--font-data);
+	font-size: 0.8125rem;
+	color: var(--c-ink);
+}
+
+/* ════════════════════ Masonry + PinNote (Wall) ════════════════════ */
+.tide-masonry {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(var(--masonry-min, 232px), 1fr));
+	gap: 14px;
+	align-items: start;
+}
+@supports (grid-template-rows: masonry) {
+	.tide-masonry {
+		grid-template-rows: masonry;
+	}
+}
+@supports (display: grid-lanes) {
+	.tide-masonry {
+		display: grid-lanes;
+	}
+}
+.tide-note {
+	position: relative;
+	border-radius: var(--r-lg);
+	background: var(--c-surface);
+	padding: 16px;
+	box-shadow: inset 0 0 0 1px var(--c-line), var(--shadow-1);
+	border-left: 3px solid var(--kc, var(--c-sea));
+	overflow: clip;
+	--pri: normal;
+}
+.tide-note[data-pri='high'] {
+	--pri: high;
+}
+.tide-note[data-pri='low'] {
+	--pri: low;
+}
+/* if() — priority drives the accent edge inline-conditionally (Chrome 137+).
+   Falls back to the plain kind colour set above. */
+@supports (border-left-color: if(style(--pri: high): red; else: blue)) {
+	.tide-note {
+		border-left-color: if(style(--pri: high): var(--c-coral); style(--pri: low): var(--c-line); else: var(--kc));
+	}
+}
+.tide-note-pinned {
+	box-shadow: inset 0 0 0 1px var(--c-line), var(--shadow-2);
+	rotate: -1deg;
+}
+@supports (rotate: random(0deg, 1deg)) {
+	.tide-note-pinned {
+		rotate: random(-1.6deg, 1.6deg);
+	}
+}
+.tide-note-kind {
+	display: inline-block;
+	margin-bottom: 8px;
+	padding: 1px 8px;
+	border-radius: var(--r-pill);
+	font-family: var(--font-data);
+	font-size: 0.625rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+}
+.tide-note-title {
+	font-size: clamp(1rem, 0.9rem + 1vw, 1.15rem);
+	line-height: 1.2;
+}
+.tide-note-ribbon {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 46px;
+	height: 46px;
+	background: linear-gradient(135deg, var(--kc), color-mix(in oklab, var(--kc) 45%, #000));
+	clip-path: polygon(100% 0, 100% 100%, 0 0);
+}
+@supports (clip-path: shape(from 0 0, line to 100% 0)) {
+	.tide-note-ribbon {
+		clip-path: shape(from 100% 0, line to 100% 68%, curve to 32% 0 with 80% 36%, close);
+	}
+}
+
+/* ════════════════════ Reduced motion ════════════════════
+   Honour the OS setting — disable all the flourish, keep the function. */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.001ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.001ms !important;
+		scroll-behavior: auto !important;
+	}
+	.tide-reveal,
+	.tide-rise,
+	.tide-in {
+		opacity: 1;
+		transform: none;
+	}
 }

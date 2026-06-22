@@ -1,0 +1,242 @@
+{
+  "/Users/sambide/GitHub/tanstart-convex-betterauth-fish/src/styles/app.css": {
+    "file": "assets/app-B3fc_Pjl.css",
+    "src": "/Users/sambide/GitHub/tanstart-convex-betterauth-fish/src/styles/app.css"
+  },
+  "_Match-ZCdcoG0e.js": {
+    "file": "assets/Match-ZCdcoG0e.js",
+    "name": "Match",
+    "imports": [
+      "_server-Bjhk73rZ.js",
+      "_router-DJ4MDNFY.js",
+      "_matchContext-C5GwsjJN.js",
+      "_redirect-BwM679Xn.js",
+      "_useRouter-DHapt4-n.js"
+    ]
+  },
+  "___tanstack-start-server-fn-resolver-B2cM8EuV.js": {
+    "file": "assets/__tanstack-start-server-fn-resolver-B2cM8EuV.js",
+    "name": "__tanstack-start-server-fn-resolver",
+    "dynamicImports": [
+      "src/library/server.ts?tss-serverfn-split"
+    ]
+  },
+  "_api-BCXZyEB6.js": {
+    "file": "assets/api-BCXZyEB6.js",
+    "name": "api",
+    "imports": [
+      "_auth-server-1e2GXFNm.js"
+    ]
+  },
+  "_auth-client-Dst_UacV.js": {
+    "file": "assets/auth-client-Dst_UacV.js",
+    "name": "auth-client",
+    "imports": [
+      "_auth-server-1e2GXFNm.js"
+    ]
+  },
+  "_auth-server-1e2GXFNm.js": {
+    "file": "assets/auth-server-1e2GXFNm.js",
+    "name": "auth-server",
+    "imports": [
+      "_request-response-BxCcpG16.js"
+    ]
+  },
+  "_convex-client-CwZu5M_z.js": {
+    "file": "assets/convex-client-CwZu5M_z.js",
+    "name": "convex-client",
+    "imports": [
+      "___tanstack-start-server-fn-resolver-B2cM8EuV.js",
+      "_createServerFn-CqXZf4BL.js",
+      "_convex-solid-C7zNHFqU.js"
+    ]
+  },
+  "_convex-solid-C7zNHFqU.js": {
+    "file": "assets/convex-solid-C7zNHFqU.js",
+    "name": "convex-solid",
+    "imports": [
+      "_auth-server-1e2GXFNm.js",
+      "_server-Bjhk73rZ.js",
+      "_useRouter-DHapt4-n.js"
+    ]
+  },
+  "_createServerFn-CqXZf4BL.js": {
+    "file": "assets/createServerFn-CqXZf4BL.js",
+    "name": "createServerFn",
+    "imports": [
+      "_redirect-BwM679Xn.js"
+    ]
+  },
+  "_manifest-DMhCq4qv.js": {
+    "file": "assets/manifest-DMhCq4qv.js",
+    "name": "manifest"
+  },
+  "_matchContext-C5GwsjJN.js": {
+    "file": "assets/matchContext-C5GwsjJN.js",
+    "name": "matchContext",
+    "imports": [
+      "_server-Bjhk73rZ.js"
+    ]
+  },
+  "_redirect-BwM679Xn.js": {
+    "file": "assets/redirect-BwM679Xn.js",
+    "name": "redirect"
+  },
+  "_request-response-BxCcpG16.js": {
+    "file": "assets/request-response-BxCcpG16.js",
+    "name": "request-response"
+  },
+  "_router-DJ4MDNFY.js": {
+    "file": "assets/router-DJ4MDNFY.js",
+    "name": "router",
+    "imports": [
+      "_matchContext-C5GwsjJN.js",
+      "_redirect-BwM679Xn.js"
+    ]
+  },
+  "_server-Bjhk73rZ.js": {
+    "file": "assets/server-Bjhk73rZ.js",
+    "name": "server"
+  },
+  "_useRouteContext-2irNSrd3.js": {
+    "file": "assets/useRouteContext-2irNSrd3.js",
+    "name": "useRouteContext",
+    "imports": [
+      "_server-Bjhk73rZ.js",
+      "_matchContext-C5GwsjJN.js",
+      "_useRouter-DHapt4-n.js"
+    ]
+  },
+  "_useRouter-DHapt4-n.js": {
+    "file": "assets/useRouter-DHapt4-n.js",
+    "name": "useRouter",
+    "imports": [
+      "_server-Bjhk73rZ.js"
+    ]
+  },
+  "node_modules/.pnpm/@tanstack+solid-start@2.0.0-beta.19_@solidjs+web@2.0.0-beta.14_solid-js@2.0.0-beta.14___8bcdf1e98a1031c3bd9b0e80ee7be92f/node_modules/@tanstack/solid-start/dist/plugin/default-entry/start.ts": {
+    "file": "assets/start-leZogNQg.js",
+    "name": "start",
+    "src": "node_modules/.pnpm/@tanstack+solid-start@2.0.0-beta.19_@solidjs+web@2.0.0-beta.14_solid-js@2.0.0-beta.14___8bcdf1e98a1031c3bd9b0e80ee7be92f/node_modules/@tanstack/solid-start/dist/plugin/default-entry/start.ts",
+    "isDynamicEntry": true
+  },
+  "src/library/server.ts?tss-serverfn-split": {
+    "file": "assets/server-Dqgr30_S.js",
+    "name": "server",
+    "src": "src/library/server.ts?tss-serverfn-split",
+    "isDynamicEntry": true,
+    "imports": [
+      "_api-BCXZyEB6.js",
+      "_auth-server-1e2GXFNm.js",
+      "_redirect-BwM679Xn.js",
+      "_createServerFn-CqXZf4BL.js"
+    ]
+  },
+  "src/router.tsx": {
+    "file": "assets/router-Bu7bvB_b.js",
+    "name": "router",
+    "src": "src/router.tsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "_auth-server-1e2GXFNm.js",
+      "_server-Bjhk73rZ.js",
+      "_router-DJ4MDNFY.js",
+      "_matchContext-C5GwsjJN.js",
+      "_manifest-DMhCq4qv.js",
+      "_redirect-BwM679Xn.js",
+      "_useRouter-DHapt4-n.js",
+      "_useRouteContext-2irNSrd3.js",
+      "_convex-solid-C7zNHFqU.js",
+      "_convex-client-CwZu5M_z.js"
+    ],
+    "dynamicImports": [
+      "src/routes/ui.tsx?tsr-split=component",
+      "src/routes/about.tsx?tsr-split=component",
+      "src/routes/_authed.tsx?tsr-split=component",
+      "src/routes/index.tsx?tsr-split=component",
+      "src/routes/_authed/dashboard.tsx?tsr-split=component"
+    ],
+    "assets": [
+      "assets/app-B3fc_Pjl.css"
+    ]
+  },
+  "src/routes/_authed.tsx?tsr-split=component": {
+    "file": "assets/_authed-CRwia7wk.js",
+    "name": "_authed",
+    "src": "src/routes/_authed.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_Match-ZCdcoG0e.js"
+    ]
+  },
+  "src/routes/_authed/dashboard.tsx?tsr-split=component": {
+    "file": "assets/dashboard-B-mJgyM3.js",
+    "name": "dashboard",
+    "src": "src/routes/_authed/dashboard.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_api-BCXZyEB6.js",
+      "_auth-client-Dst_UacV.js",
+      "_server-Bjhk73rZ.js",
+      "_useRouteContext-2irNSrd3.js",
+      "_convex-solid-C7zNHFqU.js"
+    ]
+  },
+  "src/routes/about.tsx?tsr-split=component": {
+    "file": "assets/about-fPK0fQoO.js",
+    "name": "about",
+    "src": "src/routes/about.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Bjhk73rZ.js"
+    ]
+  },
+  "src/routes/index.tsx?tsr-split=component": {
+    "file": "assets/routes-DFrV47OU.js",
+    "name": "routes",
+    "src": "src/routes/index.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Bjhk73rZ.js",
+      "_convex-solid-C7zNHFqU.js"
+    ]
+  },
+  "src/routes/ui.tsx?tsr-split=component": {
+    "file": "assets/ui-BopoCe21.js",
+    "name": "ui",
+    "src": "src/routes/ui.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Bjhk73rZ.js"
+    ]
+  },
+  "tanstack-start-manifest:v": {
+    "file": "assets/_tanstack-start-manifest_v-DdQ-LGoR.js",
+    "name": "_tanstack-start-manifest_v",
+    "src": "tanstack-start-manifest:v",
+    "isDynamicEntry": true
+  },
+  "virtual:cloudflare/worker-entry": {
+    "file": "index.js",
+    "name": "index",
+    "src": "virtual:cloudflare/worker-entry",
+    "isEntry": true,
+    "imports": [
+      "___tanstack-start-server-fn-resolver-B2cM8EuV.js",
+      "_server-Bjhk73rZ.js",
+      "_router-DJ4MDNFY.js",
+      "_matchContext-C5GwsjJN.js",
+      "_manifest-DMhCq4qv.js",
+      "_redirect-BwM679Xn.js",
+      "_Match-ZCdcoG0e.js",
+      "_createServerFn-CqXZf4BL.js",
+      "_useRouter-DHapt4-n.js",
+      "_request-response-BxCcpG16.js"
+    ],
+    "dynamicImports": [
+      "tanstack-start-manifest:v",
+      "src/router.tsx",
+      "node_modules/.pnpm/@tanstack+solid-start@2.0.0-beta.19_@solidjs+web@2.0.0-beta.14_solid-js@2.0.0-beta.14___8bcdf1e98a1031c3bd9b0e80ee7be92f/node_modules/@tanstack/solid-start/dist/plugin/default-entry/start.ts"
+    ]
+  }
+}
