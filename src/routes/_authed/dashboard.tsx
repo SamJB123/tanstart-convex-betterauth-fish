@@ -9,6 +9,7 @@ import { For, Show } from 'solid-js'
 import { addNumber } from '~/library/server'
 import { authClient } from '~/library/auth-client'
 import { useSession } from '~/library/use-session'
+import ApplicationsCard from '~/components/applications-card'
 
 export const Route = createFileRoute('/_authed/dashboard')({
   component: RouteComponent,
@@ -107,6 +108,8 @@ function RouteComponent() {
             </div>
           </Show>
         </div>
+
+        <ApplicationsCard />
       </div>
     </main>
   )
