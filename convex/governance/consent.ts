@@ -69,6 +69,22 @@ export async function hasConfirmedConsent(
   )
 }
 
+// The single grant linking an application (by its stable clientId) to a consent
+// type, if one exists. The relational backbone for "one consent per application".
+async function findApplicationGrant(
+  ctx: QueryCtx,
+  applicationClientId: string | undefined,
+  consentType: 'delegate_authority' | 'data_use',
+) {
+  if (!applicationClientId) return null
+  return ctx.db
+    .query('consentGrants')
+    .withIndex('by_application_and_type', (q) =>
+      q.eq('applicationClientId', applicationClientId).eq('consentType', consentType),
+    )
+    .first()
+}
+
 // --- Impl helpers (explicit viewer; smoke-testable) -------------------------
 
 type Relationship = 'self' | 'family' | 'community_worker' | 'agent' | 'officer' | 'other'
@@ -86,6 +102,7 @@ export async function requestConsentImpl(
     communityId?: Id<'communities'>
     consentTextVersion: string
     languageShown?: LanguageShown
+    applicationClientId?: string
   },
 ): Promise<{ delegateAuthorityId: Id<'consentGrants'>; dataUseId: Id<'consentGrants'> }> {
   const purpose = await ctx.db
@@ -108,15 +125,25 @@ export async function requestConsentImpl(
     requestedAt: Date.now(),
     consentTextVersion: args.consentTextVersion,
     languageShown: args.languageShown,
+    applicationClientId: args.applicationClientId,
   }
-  const delegateAuthorityId = await ctx.db.insert('consentGrants', {
-    ...base,
-    consentType: 'delegate_authority' as const,
-  })
-  const dataUseId = await ctx.db.insert('consentGrants', {
-    ...base,
-    consentType: 'data_use' as const,
-  })
+  // ONE grant per (application, consentType). Re-asking reuses the existing
+  // grant instead of stacking duplicates; a previously declined ask is re-opened
+  // so the fisher can reconsider.
+  const upsertGrant = async (
+    consentType: 'delegate_authority' | 'data_use',
+  ): Promise<Id<'consentGrants'>> => {
+    const existing = await findApplicationGrant(ctx, args.applicationClientId, consentType)
+    if (existing) {
+      if (existing.status === 'declined') {
+        await ctx.db.patch(existing._id, { status: 'pending', requestedAt: Date.now() })
+      }
+      return existing._id
+    }
+    return ctx.db.insert('consentGrants', { ...base, consentType })
+  }
+  const delegateAuthorityId = await upsertGrant('delegate_authority')
+  const dataUseId = await upsertGrant('data_use')
   await logAccess(ctx.db, {
     subjectPartyId: args.fisherPartyId,
     accessedByUserId: delegate.user._id,
@@ -229,6 +256,7 @@ export const requestConsent = authedMutation({
     communityId: v.optional(v.id('communities')),
     consentTextVersion: v.string(),
     languageShown: v.optional(languageShownV),
+    applicationClientId: v.optional(v.string()),
   },
   handler: (ctx, args) => requestConsentImpl(ctx, ctx.viewer, args),
 })
@@ -303,6 +331,112 @@ export const transparencyView = authedQuery({
       .order('desc')
       .take(50)
     return { accessLog, consents }
+  },
+})
+
+// Self-application: the applicant confirms their OWN data-use consent (no
+// delegate). Uses the viewer's own party server-side, so the client never needs
+// to know its party id. Creates a confirmed data_use grant for the lodge gate.
+export const confirmSelfDataUse = authedMutation({
+  args: {
+    purposeCode: v.string(),
+    scope: v.array(v.string()),
+    consentTextVersion: v.string(),
+    languageShown: v.optional(languageShownV),
+    applicationClientId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const purpose = await ctx.db
+      .query('purposes')
+      .withIndex('by_code', (q) => q.eq('code', args.purposeCode))
+      .unique()
+    if (!purpose) throw new Error(`Unknown consent purpose "${args.purposeCode}".`)
+    const now = Date.now()
+    // Idempotent: one data_use grant per application. Confirming again is a
+    // no-op (returns the same grant) rather than stacking duplicates.
+    const existing = await findApplicationGrant(ctx, args.applicationClientId, 'data_use')
+    if (existing) {
+      if (existing.status !== 'confirmed') {
+        await ctx.db.patch(existing._id, {
+          status: 'confirmed',
+          confirmedAt: now,
+          confirmedVia: 'self_account',
+          fisherUserId: ctx.viewer.user._id,
+        })
+        await logAccess(ctx.db, {
+          subjectPartyId: ctx.viewer.party._id,
+          accessedByUserId: ctx.viewer.user._id,
+          entityTable: 'consentGrants',
+          action: 'consent_confirm',
+          purposeId: purpose._id,
+          dataCategories: args.scope,
+          reason: 'Self data-use consent confirmed',
+        })
+      }
+      return existing._id
+    }
+    const id = await ctx.db.insert('consentGrants', {
+      fisherPartyId: ctx.viewer.party._id,
+      fisherUserId: ctx.viewer.user._id,
+      relationship: 'self',
+      consentType: 'data_use',
+      purposeId: purpose._id,
+      scope: args.scope,
+      status: 'confirmed',
+      requestedAt: now,
+      confirmedAt: now,
+      confirmedVia: 'self_account',
+      languageShown: args.languageShown,
+      consentTextVersion: args.consentTextVersion,
+      applicationClientId: args.applicationClientId,
+    })
+    await logAccess(ctx.db, {
+      subjectPartyId: ctx.viewer.party._id,
+      accessedByUserId: ctx.viewer.user._id,
+      entityTable: 'consentGrants',
+      action: 'consent_confirm',
+      purposeId: purpose._id,
+      dataCategories: args.scope,
+      reason: 'Self data-use consent confirmed',
+    })
+    return id
+  },
+})
+
+// Consent state for one application (keyed by its stable clientId) — the
+// relational "what consent exists for THIS application" view. Visible to the
+// rights-holder, a delegate on the grants, or a regulator. Drives the wizard's
+// live "already said yes" state so the consent step can't be repeated.
+export const consentForApplication = authedQuery({
+  args: { applicationClientId: v.string() },
+  handler: async (ctx, args) => {
+    const grants = await ctx.db
+      .query('consentGrants')
+      .withIndex('by_application_and_type', (q) =>
+        q.eq('applicationClientId', args.applicationClientId),
+      )
+      .take(10)
+    return grants.filter(
+      (g) =>
+        ctx.viewer.party._id === g.fisherPartyId ||
+        g.delegateUserId === ctx.viewer.user._id ||
+        ctx.viewer.isRegulator,
+    )
+  },
+})
+
+// One-off dev cleanup: remove legacy consent grants made before consent was
+// linked 1:1 to an application (i.e. those with no `applicationClientId`) — the
+// duplicate spam from repeated clicking. Going forward every grant is app-linked
+// and deduped, so nothing new lands here. Run: `npx convex run
+// governance/consent:purgeUnlinkedConsents`.
+export const purgeUnlinkedConsents = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const grants = await ctx.db.query('consentGrants').collect()
+    const orphans = grants.filter((g) => g.applicationClientId == null)
+    for (const g of orphans) await ctx.db.delete(g._id)
+    return { deleted: orphans.length, kept: grants.length - orphans.length }
   },
 })
 

@@ -15,6 +15,21 @@ import { resend, EMAIL_FROM } from './email'
 
 const siteUrl = process.env.SITE_URL!
 
+// Origins Better Auth will accept requests from. `baseURL` (siteUrl) is trusted
+// automatically; we also keep localhost so this same deployment still serves
+// local dev, plus any extras from EXTRA_TRUSTED_ORIGINS (comma-separated) — e.g.
+// a preview URL. Without the deployed Worker origin here, Better Auth rejects
+// its sign-in/up requests as cross-origin (CSRF protection).
+const trustedOrigins = [
+  ...new Set([
+    siteUrl,
+    'http://localhost:3000',
+    ...(process.env.EXTRA_TRUSTED_ORIGINS?.split(',')
+      .map((s) => s.trim())
+      .filter(Boolean) ?? []),
+  ]),
+]
+
 // LOCAL INSTALL of the Better Auth component (convex/betterAuth/*). The local
 // install is what unlocks plugins beyond the default set — here, the
 // organization plugin (community/PBC membership + native invitations). The
@@ -70,6 +85,7 @@ export const { onCreate, onUpdate, onDelete } = authComponent.triggersApi()
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
   ({
     baseURL: siteUrl,
+    trustedOrigins,
     database: authComponent.adapter(ctx),
     // Simple, non-verified email/password to get started.
     emailAndPassword: {

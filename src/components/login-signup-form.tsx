@@ -1,198 +1,171 @@
 import { useNavigate } from '@tanstack/solid-router'
-import { createSignal } from 'solid-js'
+import { createSignal, Show } from 'solid-js'
 import { authClient } from '~/library/auth-client'
 import { refreshAuth } from '~/library/convex-client'
+import { Button, Callout, Icon, SegmentedControl, TextField } from '~/ui'
+
+// The front door — an unauthenticated person's first screen. Rebuilt on the Tide
+// design system: ocean palette, display type, mobile-first and sunlight-readable,
+// composed entirely from the kit's primitives (no bespoke markup to maintain).
+type Mode = 'signin' | 'signup'
 
 export default function LoginSignupForm() {
   const navigate = useNavigate()
-  const [isLogin, setIsLogin] = createSignal(true)
+  const [mode, setMode] = createSignal<Mode>('signin')
   const [name, setName] = createSignal('')
   const [email, setEmail] = createSignal('')
   const [password, setPassword] = createSignal('')
   const [error, setError] = createSignal('')
   const [loading, setLoading] = createSignal(false)
 
-  const handleSubmit = async (e: Event) => {
+  const isSignin = () => mode() === 'signin'
+
+  const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault()
+    const fd = new FormData(e.currentTarget as HTMLFormElement)
+    const emailV = String(fd.get('email') ?? '').trim()
+    const passwordV = String(fd.get('password') ?? '')
+    const nameV = String(fd.get('name') ?? '').trim()
     setError('')
     setLoading(true)
-
     try {
-      if (isLogin()) {
-        await authClient.signIn.email({
-          email: email(),
-          password: password(),
-        })
+      if (isSignin()) {
+        await authClient.signIn.email({ email: emailV, password: passwordV })
       } else {
-        await authClient.signUp.email({
-          name: name(),
-          email: email(),
-          password: password(),
-        })
+        await authClient.signUp.email({ name: nameV, email: emailV, password: passwordV })
       }
-
       refreshAuth()
-
       navigate({ to: '/dashboard' })
-    } catch (err: any) {
-      setError(err?.message || 'An error occurred')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <main class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-      <div class="w-full max-w-md">
-        <div class="bg-white rounded-2xl shadow-xl p-8 md:p-10">
-          <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">
-              {isLogin() ? 'Welcome Back' : 'Create Account'}
-            </h1>
-            <p class="text-gray-600 text-sm">
-              {isLogin()
-                ? 'Sign in to continue to your account'
-                : 'Get started with your free account'}
-            </p>
-          </div>
+    <main
+      class="tide-safe-x tide-scroll relative flex min-h-[100dvh] flex-col items-center justify-center overflow-x-clip px-5 py-12"
+      style={{
+        background:
+          'radial-gradient(120% 62% at 50% -8%, color-mix(in oklab, var(--c-sun) 18%, transparent), transparent 55%), linear-gradient(180deg, var(--c-surface) 0%, color-mix(in oklab, var(--c-sea) 11%, var(--c-bg)) 100%)',
+      }}
+    >
+      {/* A soft horizon band near the foot of the screen — the water. */}
+      <div
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-x-0 bottom-0 h-[34dvh]"
+        style={{
+          background:
+            'radial-gradient(140% 100% at 50% 120%, color-mix(in oklab, var(--c-sea) 20%, transparent), transparent 70%)',
+          'mask-image': 'linear-gradient(180deg, transparent, #000 60%)',
+          opacity: '0.55',
+        }}
+      />
 
-          <form onSubmit={handleSubmit} class="space-y-5">
-            {!isLogin() && (
-              <div>
-                <label
-                  for="name"
-                  class="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Full Name
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={name()}
-                  onInput={(e) => setName(e.currentTarget.value)}
-                  required={!isLogin()}
-                  class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
-                  placeholder="John Doe"
-                />
-              </div>
-            )}
+      <div class="tide-rise relative z-10 flex w-full max-w-[400px] flex-col items-center">
+        {/* Brand mark */}
+        <span
+          class="grid h-16 w-16 place-items-center rounded-[var(--r-xl)] text-[var(--c-on-sea)]"
+          style={{
+            background:
+              'linear-gradient(155deg, color-mix(in oklab, var(--c-sea) 78%, var(--c-reef)), var(--c-sea))',
+            'box-shadow': '0 14px 32px -12px color-mix(in oklab, var(--c-sea) 72%, transparent)',
+          }}
+        >
+          <Icon name="waves" size={32} />
+        </span>
 
-            <div>
-              <label
-                for="email"
-                class="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email()}
-                onInput={(e) => setEmail(e.currentTarget.value)}
-                required
-                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
-                placeholder="you@example.com"
+        <p class="mt-5 font-data text-[0.6875rem] font-semibold uppercase tracking-[0.18em] text-[var(--c-sea)]">
+          Australian Fisheries Management Authority
+        </p>
+        <h1 class="mt-1.5 text-center font-display text-[1.875rem] font-medium leading-tight text-[var(--c-ink)]">
+          Torres Strait Fisheries
+        </h1>
+        <p class="mt-2 max-w-[18rem] text-center text-[0.9375rem] leading-relaxed text-[var(--c-muted)]">
+          Apply for and look after your fishing licence — built with community.
+        </p>
+
+        {/* The auth card */}
+        <div
+          class="mt-7 w-full rounded-[var(--r-xl)] bg-[var(--c-surface)] p-6 sm:p-7"
+          style={{ 'box-shadow': 'var(--shadow-3)' }}
+        >
+          <SegmentedControl
+            ariaLabel="Sign in or create an account"
+            options={[
+              { id: 'signin', label: 'Sign in' },
+              { id: 'signup', label: 'Create account' },
+            ]}
+            value={mode()}
+            onChange={(m) => {
+              setMode(m)
+              setError('')
+            }}
+          />
+
+          <form onSubmit={handleSubmit} class="mt-5 flex flex-col gap-4">
+            <Show when={!isSignin()}>
+              <TextField
+                label="Full name"
+                name="name"
+                value={name()}
+                onInput={setName}
+                required={!isSignin()}
+                autocomplete="name"
+                placeholder="Your name"
               />
-            </div>
+            </Show>
 
-            <div>
-              <label
-                for="password"
-                class="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password()}
-                onInput={(e) => setPassword(e.currentTarget.value)}
-                required
-                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
-                placeholder="••••••••"
-              />
-            </div>
+            <TextField
+              label="Email"
+              name="email"
+              type="email"
+              inputmode="email"
+              value={email()}
+              onInput={setEmail}
+              required
+              autocomplete="email"
+              placeholder="you@example.com"
+            />
 
-            {error() && (
-              <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
-                <svg
-                  class="w-5 h-5 flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-                <span>{error()}</span>
-              </div>
-            )}
+            <TextField
+              label="Password"
+              name="password"
+              type="password"
+              value={password()}
+              onInput={setPassword}
+              required
+              autocomplete={isSignin() ? 'current-password' : 'new-password'}
+              placeholder="••••••••"
+            />
 
-            <button
+            <Show when={error()}>
+              <Callout tone="warning" title="Couldn't continue">
+                {error()}
+              </Callout>
+            </Show>
+
+            <Button
               type="submit"
-              disabled={loading()}
-              class={`w-full px-4 py-3 rounded-lg font-semibold text-white transition-all duration-200 ${
-                loading()
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
-              }`}
+              block
+              size="lg"
+              loading={loading()}
+              iconRight={isSignin() ? 'arrow-right' : 'check'}
+              class="mt-1"
             >
-              {loading() ? (
-                <span class="flex items-center justify-center gap-2">
-                  <svg
-                    class="animate-spin h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      class="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      stroke-width="4"
-                    ></circle>
-                    <path
-                      class="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Processing...
-                </span>
-              ) : isLogin() ? (
-                'Sign In'
-              ) : (
-                'Create Account'
-              )}
-            </button>
+              {isSignin() ? 'Sign in' : 'Create account'}
+            </Button>
           </form>
-
-          <div class="mt-6 text-center">
-            <button
-              onClick={() => {
-                setIsLogin(!isLogin())
-                setError('')
-              }}
-              class="text-sm text-gray-600 hover:text-blue-600 transition-colors duration-200 font-medium"
-            >
-              {isLogin() ? (
-                <>
-                  Don't have an account?{' '}
-                  <span class="text-blue-600 hover:underline">Sign up</span>
-                </>
-              ) : (
-                <>
-                  Already have an account?{' '}
-                  <span class="text-blue-600 hover:underline">Sign in</span>
-                </>
-              )}
-            </button>
-          </div>
         </div>
+
+        <p class="mt-6 flex max-w-[20rem] items-start gap-2 text-[0.75rem] leading-relaxed text-[var(--c-faint)]">
+          <Icon name="shield" size={14} class="mt-0.5 flex-none" />
+          <span class="text-left">
+            Your information is held under Indigenous data-governance principles. You choose what's shared, and you
+            can see who has looked at it.
+          </span>
+        </p>
       </div>
     </main>
   )

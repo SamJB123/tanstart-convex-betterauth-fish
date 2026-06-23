@@ -34,6 +34,7 @@ import type * as quota_smoke from "../quota/smoke.js";
 import type * as quota_tables from "../quota/tables.js";
 import type * as rbac from "../rbac.js";
 import type * as rbacSmoke from "../rbacSmoke.js";
+import type * as reference_fisheries from "../reference/fisheries.js";
 import type * as reference_geometries from "../reference/geometries.js";
 import type * as reference_tables from "../reference/tables.js";
 import type * as reporting_tables from "../reporting/tables.js";
@@ -73,6 +74,7 @@ declare const fullApi: ApiFromModules<{
   "quota/tables": typeof quota_tables;
   rbac: typeof rbac;
   rbacSmoke: typeof rbacSmoke;
+  "reference/fisheries": typeof reference_fisheries;
   "reference/geometries": typeof reference_geometries;
   "reference/tables": typeof reference_tables;
   "reporting/tables": typeof reporting_tables;

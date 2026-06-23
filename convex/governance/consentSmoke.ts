@@ -105,6 +105,36 @@ export const run = internalMutation({
     await revokeConsentImpl(ctx, fisher, dataUseId, 'Changed my mind')
     ok('gate CLOSED after revocation', (await hasConfirmedConsent(ctx, fisherPartyId, 'data_use')) === false)
 
+    // 5b. RELATIONAL UNIQUENESS: re-requesting consent for the SAME application
+    //     reuses the same two grants — clicking twice can't create duplicates.
+    const appClientId = `smoke-app-${Math.random().toString(36).slice(2)}`
+    const first = await requestConsentImpl(ctx, delegate, {
+      fisherPartyId,
+      relationship: 'family',
+      purposeCode: smokeCode,
+      scope: ['name'],
+      consentTextVersion: 'v1',
+      applicationClientId: appClientId,
+    })
+    const second = await requestConsentImpl(ctx, delegate, {
+      fisherPartyId,
+      relationship: 'family',
+      purposeCode: smokeCode,
+      scope: ['name'],
+      consentTextVersion: 'v1',
+      applicationClientId: appClientId,
+    })
+    grantIds.push(first.delegateAuthorityId, first.dataUseId)
+    ok(
+      're-request reuses the same grants (no duplicates)',
+      first.delegateAuthorityId === second.delegateAuthorityId && first.dataUseId === second.dataUseId,
+    )
+    const appGrants = await ctx.db
+      .query('consentGrants')
+      .withIndex('by_application_and_type', (q) => q.eq('applicationClientId', appClientId))
+      .collect()
+    ok('exactly two grants exist for the application', appGrants.length === 2)
+
     // 6. The transparency log captured the events (append-only).
     const log = await ctx.db
       .query('dataAccessLog')

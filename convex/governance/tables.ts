@@ -137,9 +137,16 @@ export const governanceTables = {
     languageShown: v.optional(languageShown),
     consentTextVersion: v.string(), // exact wording shown — reproducible evidence
     expiresAt: v.optional(v.number()),
+    // Relational link to the application this consent is FOR. The application is
+    // only created at lodge, so we key on its stable `clientId` (the same offline
+    // idempotency key the application row carries) — set from the moment consent
+    // is asked. Exactly one grant per (application, consentType): see the
+    // `by_application_and_type` index, enforced in code on every write.
+    applicationClientId: v.optional(v.string()),
   })
     .index('by_fisherParty', ['fisherPartyId'])
     .index('by_fisherParty_and_type', ['fisherPartyId', 'consentType'])
+    .index('by_application_and_type', ['applicationClientId', 'consentType'])
     .index('by_delegateUser', ['delegateUserId'])
     .index('by_status', ['status']),
 }

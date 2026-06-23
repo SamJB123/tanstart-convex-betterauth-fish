@@ -8,13 +8,5 @@ export const Route = createFileRoute('/')({
       throw redirect({ to: '/dashboard' })
     }
   },
-  component: RouteComponent,
+  component: LoginSignupForm,
 })
-
-function RouteComponent() {
-  return (
-    <main>
-      <LoginSignupForm />
-    </main>
-  )
-}

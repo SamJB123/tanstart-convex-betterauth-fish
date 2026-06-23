@@ -120,25 +120,25 @@ body {
 
 /* The template set body{font-family}, a{margin-right}, main{text-align:center}.
    Those global element rules fight a real layout, so we reset them here — our
-   components own their own spacing. */
-a {
-	color: inherit;
-	text-decoration: none;
-}
-main {
-	text-align: start;
-	padding: 0;
-	margin: 0;
-}
+   components own their own spacing. CRITICAL: these live in `@layer base` so
+   Tailwind utilities (px-*, mt-*, …) still win. Unlayered, an element rule like
+   `main{padding:0}` would beat a layered `.px-5` and silently zero the gutters. */
+@layer base {
+	a {
+		color: inherit;
+		text-decoration: none;
+	}
+	main {
+		text-align: start;
+	}
 
-h1, h2, h3, h4 {
-	margin: 0;
-	font-weight: 600;
-	text-wrap: balance; /* even heading line lengths (Baseline) */
-}
-p {
-	margin: 0;
-	text-wrap: pretty; /* avoid orphans in body copy */
+	h1, h2, h3, h4 {
+		font-weight: 600;
+		text-wrap: balance; /* even heading line lengths (Baseline) */
+	}
+	p {
+		text-wrap: pretty; /* avoid orphans in body copy */
+	}
 }
 
 /* Sunlight-readable, accessible focus. Only show the ring for keyboard users. */
@@ -1029,5 +1029,169 @@ p {
 	.tide-in {
 		opacity: 1;
 		transform: none;
+	}
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   THE CROSSING — the assisted licence-application voyage
+   ────────────────────────────────────────────────────────────────────────────
+   A scene-at-a-time journey "across the water" to AFMA. Each scene fills the
+   viewport; advancing runs a View Transition so the next scene rises from below
+   (you sail on). A tide rail down the edge fills as you progress. Light + airy
+   (sunlight-readable), with @supports-gated flourishes. ════════════════════════ */
+
+@property --crossing-shimmer {
+	syntax: '<percentage>';
+	inherits: false;
+	initial-value: 0%;
+}
+
+.crossing {
+	position: relative;
+	height: 100dvh; /* fixed frame: the <main> inside is the sole scroller */
+	display: flex;
+	flex-direction: column;
+	overflow: clip;
+	/* Sky-to-sea-mist over warm sand — airy, not a dark ocean. */
+	background:
+		radial-gradient(120% 70% at 50% -10%, color-mix(in oklab, var(--c-sea) 10%, transparent), transparent 60%),
+		linear-gradient(180deg, var(--c-surface) 0%, color-mix(in oklab, var(--c-sea) 7%, var(--c-bg)) 100%);
+}
+/* A slow horizon shimmer band near the bottom — the water. */
+.crossing::after {
+	content: '';
+	position: fixed;
+	inset: auto 0 0 0;
+	height: 38dvh;
+	pointer-events: none;
+	z-index: 0;
+	background:
+		radial-gradient(140% 100% at 50% 120%, color-mix(in oklab, var(--c-sea) 22%, transparent), transparent 70%);
+	mask-image: linear-gradient(180deg, transparent, #000 60%);
+	opacity: 0.5;
+}
+
+/* ── Tide rail (progress) ── */
+.crossing-rail {
+	position: fixed;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	width: 4px;
+	z-index: 25;
+	background: color-mix(in oklab, var(--c-sea) 14%, transparent);
+}
+.crossing-rail-fill {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: var(--crossing-progress, 0%);
+	border-radius: 0 0 4px 4px;
+	background: linear-gradient(180deg, color-mix(in oklab, var(--c-sea) 70%, var(--c-reef)), var(--c-sea));
+	transition: height 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+/* the boat/marker riding the tide line */
+.crossing-rail-marker {
+	position: absolute;
+	left: 50%;
+	top: var(--crossing-progress, 0%);
+	width: 12px;
+	height: 12px;
+	transform: translate(-50%, -50%);
+	border-radius: 50%;
+	background: var(--c-surface);
+	box-shadow: 0 0 0 3px var(--c-sea), 0 2px 8px -2px color-mix(in oklab, var(--c-sea) 60%, transparent);
+	transition: top 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ── Scene + the "sail forward" view transition ── */
+.crossing-scene {
+	position: relative;
+	z-index: 1;
+	flex: 1;
+	view-transition-name: crossing-scene;
+}
+@keyframes crossing-rise-in {
+	from { opacity: 0; transform: translateY(7%); }
+	to { opacity: 1; transform: none; }
+}
+@keyframes crossing-recede-up {
+	from { opacity: 1; transform: none; }
+	to { opacity: 0; transform: translateY(-5%); }
+}
+@keyframes crossing-rise-down {
+	from { opacity: 0; transform: translateY(-7%); }
+	to { opacity: 1; transform: none; }
+}
+@keyframes crossing-recede-down {
+	from { opacity: 1; transform: none; }
+	to { opacity: 0; transform: translateY(5%); }
+}
+::view-transition-group(crossing-scene) {
+	animation-duration: 0.5s;
+	animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+/* forward = sail on (next rises from below) */
+:root:active-view-transition-type(forward)::view-transition-new(crossing-scene) {
+	animation-name: crossing-rise-in;
+}
+:root:active-view-transition-type(forward)::view-transition-old(crossing-scene) {
+	animation-name: crossing-recede-up;
+}
+:root:active-view-transition-type(back)::view-transition-new(crossing-scene) {
+	animation-name: crossing-rise-down;
+}
+:root:active-view-transition-type(back)::view-transition-old(crossing-scene) {
+	animation-name: crossing-recede-down;
+}
+
+/* ── Eyebrow that names the leg of the journey ── */
+.crossing-leg {
+	font-family: var(--font-data);
+	font-size: 0.6875rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	color: var(--c-sea);
+}
+
+/* ── Arrival flourish (after lodging) ── */
+@keyframes crossing-arrival-sun {
+	from { transform: translateY(40px) scale(0.9); opacity: 0; }
+	to { transform: none; opacity: 1; }
+}
+.crossing-arrival-sun {
+	width: 96px;
+	height: 96px;
+	border-radius: 50%;
+	background: radial-gradient(circle at 50% 45%, color-mix(in oklab, var(--c-sun) 60%, white), var(--c-coral));
+	box-shadow: 0 0 60px -8px color-mix(in oklab, var(--c-sun) 60%, transparent);
+	animation: crossing-arrival-sun 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* ── The live-consent pulse (waiting on the fisher) ── */
+@keyframes crossing-waiting {
+	0%, 100% { opacity: 0.4; }
+	50% { opacity: 1; }
+}
+.crossing-waiting-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--c-sea);
+	animation: crossing-waiting 1.4s ease-in-out infinite;
+}
+.crossing-waiting-dot:nth-child(2) { animation-delay: 0.2s; }
+.crossing-waiting-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@media (prefers-reduced-motion: reduce) {
+	.crossing-rail-fill,
+	.crossing-rail-marker {
+		transition: none;
+	}
+	.crossing-arrival-sun,
+	.crossing-waiting-dot {
+		animation: none;
 	}
 }

@@ -1,30 +1,58 @@
-import {
-  createFileRoute,
-  useNavigate,
-  useRouteContext,
-} from '@tanstack/solid-router'
+import { createFileRoute, useNavigate, useRouteContext } from '@tanstack/solid-router'
+import { For, Show } from 'solid-js'
 import { useQuery } from '~/library/convex-solid'
 import { api } from 'convex/_generated/api'
-import { For, Show } from 'solid-js'
-import { addNumber } from '~/library/server'
 import { authClient } from '~/library/auth-client'
 import { useSession } from '~/library/use-session'
-import ApplicationsCard from '~/components/applications-card'
+import { useDrafts } from '~/collections/drafts'
+import { LICENCE_TYPES } from '~/features/crossing/copy'
+import {
+  AppBar,
+  AppShell,
+  Button,
+  Card,
+  Chip,
+  Divider,
+  EmptyState,
+  Eyebrow,
+  Icon,
+  ListRow,
+  type Tone,
+} from '~/ui'
 
-export const Route = createFileRoute('/_authed/dashboard')({
-  component: RouteComponent,
-})
+// The signed-in home. A hub, not a demo: pick up an in-progress application,
+// answer anything waiting on you, and see where your lodged applications stand —
+// all live (Convex) and offline-aware (the on-device drafts collection).
+export const Route = createFileRoute('/_authed/dashboard')({ component: DashboardRoute })
 
-function RouteComponent() {
+const STATUS: Record<string, { label: string; tone: Tone }> = {
+  draft: { label: 'Draft', tone: 'neutral' },
+  submitted: { label: 'Lodged', tone: 'sea' },
+  under_review: { label: 'Under review', tone: 'sun' },
+  info_requested: { label: 'Info needed', tone: 'coral' },
+  granted: { label: 'Granted', tone: 'reef' },
+  refused: { label: 'Refused', tone: 'ember' },
+}
+
+const licenceName = (code?: string) =>
+  LICENCE_TYPES.find((l) => l.code === code)?.name ?? 'Licence application'
+
+function DashboardRoute() {
   const navigate = useNavigate()
   const context = useRouteContext({ from: '/_authed' })
-  // Live, client-reactive session (updates on sign-in/out without a navigation).
   const session = useSession()
-  // Prefer the live session user; fall back to the server-resolved route-context
-  // user so the name shows immediately on first render (before /get-session).
   const user = () => session().data?.user ?? context().user
-  // example of a Convex query
-  const { data } = useQuery(api.myFunctions.listNumbers, { count: 10 })
+  const firstName = () => (user()?.name ?? '').trim().split(/\s+/)[0] || 'there'
+
+  const drafts = useDrafts()
+  const inProgress = () => (drafts() ?? []).filter((d) => d.status !== 'lodged')
+  const apps = useQuery(api.licensing.applications.listMine, {})
+  const pending = useQuery(api.governance.consent.myPendingConsents, {})
+
+  const greeting = () => {
+    const h = new Date().getHours()
+    return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'
+  }
 
   const handleSignOut = async () => {
     await authClient.signOut()
@@ -32,85 +60,150 @@ function RouteComponent() {
   }
 
   return (
-    <main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <header class="bg-white shadow-sm border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-              <Show when={user()}>
-                {(u) => (
-                  <p class="text-sm text-gray-600 mt-1">
-                    Welcome back, {u().name || u().email}!
-                  </p>
-                )}
-              </Show>
-            </div>
-            <button
-              onClick={handleSignOut}
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow"
-            >
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </header>
+    <AppShell>
+      <AppBar
+        title={<span class="font-display">Home</span>}
+        subtitle="AFMA Torres Strait"
+        trailing={
+          <Button variant="ghost" size="sm" onClick={handleSignOut}>
+            Sign out
+          </Button>
+        }
+      />
 
-      {/* Main Content */}
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Numbers Card */}
-        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-6">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold text-gray-900">Numbers</h2>
-            <button
-              onClick={() => addNumber()}
-              class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              Add Random Number To Convex
-            </button>
+      <main class="flex flex-1 flex-col gap-7 px-4 pb-24 pt-4">
+        {/* Greeting + primary action — the ocean hero. */}
+        <section
+          class="tide-rise relative overflow-clip rounded-[var(--r-xl)] px-5 py-6 text-[var(--c-on-sea)]"
+          style={{
+            background:
+              'radial-gradient(120% 90% at 90% -20%, color-mix(in oklab, var(--c-reef) 55%, transparent), transparent 60%), linear-gradient(150deg, var(--c-sea) 0%, var(--c-sea-deep) 100%)',
+            'box-shadow': '0 16px 36px -18px color-mix(in oklab, var(--c-sea) 80%, transparent)',
+          }}
+        >
+          <div
+            aria-hidden="true"
+            class="pointer-events-none absolute -right-6 -top-6 opacity-20"
+          >
+            <Icon name="waves" size={120} />
           </div>
+          <p class="font-data text-[0.6875rem] font-semibold uppercase tracking-[0.16em] opacity-80">
+            {greeting()}
+          </p>
+          <h1 class="mt-1 font-display text-[1.625rem] font-medium leading-tight">{firstName()}</h1>
+          <p class="mt-2 max-w-[20rem] text-[0.9375rem] leading-relaxed opacity-90">
+            <Show
+              when={inProgress().length > 0}
+              fallback="Ready to apply for a fishing licence? It only takes a few minutes."
+            >
+              You have an application on the way. Pick up where you left off.
+            </Show>
+          </p>
+          <Button
+            class="mt-4 w-full sm:w-auto"
+            variant="secondary"
+            size="lg"
+            iconRight="arrow-right"
+            onClick={() => navigate({ to: '/apply' })}
+          >
+            <Show when={inProgress().length > 0} fallback="Start an application">
+              Continue your application
+            </Show>
+          </Button>
+        </section>
 
-          <Show
-            when={data()?.numbers && data()!.numbers.length > 0}
-            fallback={
-              <div class="text-center py-12">
-                <svg
-                  class="mx-auto h-12 w-12 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900">
-                  No numbers yet
-                </h3>
-                <p class="mt-1 text-sm text-gray-500">
-                  Get started by adding your first number.
-                </p>
-              </div>
+        {/* Anything waiting on this person to confirm (the consent handoff). */}
+        <Show when={(pending.data() ?? []).length > 0}>
+          <Card
+            class="tide-rise"
+            accent="var(--c-sun)"
+            title="Someone needs you to say yes"
+            action={
+              <Button variant="secondary" size="sm" iconRight="arrow-right" onClick={() => navigate({ to: '/confirm' })}>
+                Review
+              </Button>
             }
           >
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              <For each={data()?.numbers}>
-                {(number) => (
-                  <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 text-center border border-blue-100 hover:border-blue-300 transition-all duration-200 hover:shadow-md">
-                    <div class="text-2xl font-bold text-blue-600">{number}</div>
-                  </div>
+            <p class="text-[0.9375rem] text-[var(--c-muted)]">
+              {(pending.data() ?? []).length === 1
+                ? 'One consent request is waiting for you. Only you can say yes.'
+                : `${(pending.data() ?? []).length} consent requests are waiting for you. Only you can say yes.`}
+            </p>
+          </Card>
+        </Show>
+
+        {/* In-progress drafts (on-device). */}
+        <Show when={inProgress().length > 0}>
+          <section>
+            <Eyebrow>On the way</Eyebrow>
+            <Card flush class="mt-2">
+              <For each={inProgress()}>
+                {(d, i) => (
+                  <>
+                    <Show when={i() > 0}>
+                      <Divider />
+                    </Show>
+                    <ListRow
+                      leadingIcon="document"
+                      label={d.fisher.name ? `${d.fisher.name} · ${licenceName(d.licenceTypeCode)}` : licenceName(d.licenceTypeCode)}
+                      sublabel={d.mode === 'delegate' ? 'You are helping with this one' : 'Your application'}
+                      value={<Chip tone="sea">Draft</Chip>}
+                      onClick={() => navigate({ to: '/apply' })}
+                    />
+                  </>
                 )}
               </For>
-            </div>
-          </Show>
-        </div>
+            </Card>
+          </section>
+        </Show>
 
-        <ApplicationsCard />
-      </div>
-    </main>
+        {/* Lodged applications and their live status. */}
+        <section>
+          <Eyebrow>Your applications</Eyebrow>
+          <Show
+            when={(apps.data() ?? []).length > 0}
+            fallback={
+              <Card class="mt-2">
+                <EmptyState
+                  icon="fish"
+                  title="No applications yet"
+                  description="When you lodge a licence application, it'll appear here so you can track it."
+                />
+              </Card>
+            }
+          >
+            <Card flush class="mt-2">
+              <For each={apps.data()}>
+                {(app, i) => {
+                  const s = () => STATUS[app.status] ?? { label: app.status, tone: 'neutral' as Tone }
+                  return (
+                    <>
+                      <Show when={i() > 0}>
+                        <Divider />
+                      </Show>
+                      <ListRow
+                        leadingIcon="shield"
+                        label={licenceName(app.licenceTypeCode)}
+                        sublabel={`Lodged ${new Date(app._creationTime).toLocaleDateString()}`}
+                        value={<Chip tone={s().tone} solid>{s().label}</Chip>}
+                      />
+                    </>
+                  )
+                }}
+              </For>
+            </Card>
+          </Show>
+        </section>
+
+        {/* Transparency — quiet but always reachable. */}
+        <ListRow
+          class="rounded-[var(--r-lg)] bg-[var(--c-surface)] px-4 shadow-[inset_0_0_0_1px_var(--c-line)]"
+          leadingIcon="search"
+          label="What's held about you"
+          sublabel="Your information & who has looked at it"
+          onClick={() => navigate({ to: '/my-data' })}
+        />
+      </main>
+    </AppShell>
   )
 }

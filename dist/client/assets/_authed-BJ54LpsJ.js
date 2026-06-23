@@ -1,0 +1,1 @@
+import{k as e,s as t}from"./main-D8QPCrtu.js";var n=()=>e(t,{});export{n as component};

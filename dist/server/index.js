@@ -5,8 +5,8 @@ import { n as resolveManifestAssetLink } from "./assets/manifest-DMhCq4qv.js";
 import { A as flush, B as Pu, E as createRenderEffect, F as runWithOwner, G as re, H as ai, K as su, P as onSettled, T as createMemo, U as dn, V as Sn, W as iu, a as mergeProps, b as Show, o as renderToStream, z as p } from "./assets/server-Bjhk73rZ.js";
 import { a as ErrorComponent, i as CatchBoundary, r as SafeFragment, t as Match } from "./assets/Match-ZCdcoG0e.js";
 import { n as routerContext, t as useRouter } from "./assets/useRouter-DHapt4-n.js";
-import { n as getResponse, r as requestHandler } from "./assets/request-response-BxCcpG16.js";
-import { t as getServerFnById } from "./assets/__tanstack-start-server-fn-resolver-B2cM8EuV.js";
+import { n as getResponse, r as requestHandler } from "./assets/request-response-CPTfzWA9.js";
+import { t as getServerFnById } from "./assets/__tanstack-start-server-fn-resolver-Dp3Fgcmv.js";
 import { a as runWithStartContext, c as FrameType, d as TSS_SERVER_FUNCTION, f as X_TSS_RAW_RESPONSE, i as getStartOptions, l as TSS_CONTENT_TYPE_FRAMED_VERSIONED, n as flattenMiddlewares, o as createNullProtoObject, p as X_TSS_SERIALIZED, r as mergeHeaders, s as safeObjectMerge, u as TSS_FORMDATA_CONTEXT } from "./assets/createServerFn-CqXZf4BL.js";
 import { ReadableStream as ReadableStream$1 } from "node:stream/web";
 import "node:stream";
@@ -567,7 +567,7 @@ var HEADERS = { TSS_SHELL: "X-TSS_SHELL" };
 * the dev styles URL for route-scoped CSS collection.
 */
 async function getStartManifest(matchedRoutes) {
-	const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-DdQ-LGoR.js");
+	const { tsrStartManifest } = await import("./assets/_tanstack-start-manifest_v-DUaltonc.js");
 	const startManifest = tsrStartManifest();
 	const rootRoute = startManifest.routes[rootRouteId] = startManifest.routes["__root__"] || {};
 	rootRoute.assets = rootRoute.assets || [];
@@ -1704,7 +1704,7 @@ var baseManifestPromise;
 */
 var cachedFinalManifestPromise;
 async function loadEntries() {
-	const routerEntry = await import("./assets/router-Bu7bvB_b.js");
+	const routerEntry = await import("./assets/router-Dss1pI2f.js");
 	return {
 		startEntry: await import("./assets/start-leZogNQg.js"),
 		routerEntry

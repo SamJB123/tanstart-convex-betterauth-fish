@@ -98,8 +98,9 @@ export async function upsertTiVerificationImpl(
         .unique()
     : null
   if (existing) {
+    // Already lodged → idempotent no-op (keeps a lodge retry safe).
     if (existing.status === 'pending_pzja' || existing.status === 'approved') {
-      throw new Error('This verification has already been lodged and can’t be edited.')
+      return existing._id
     }
     await ctx.db.patch(existing._id, fields)
     return existing._id
@@ -141,7 +142,8 @@ export async function submitTiVerificationImpl(
 
 export const upsertTiVerification = authedMutation({
   args: {
-    applicantPartyId: v.id('parties'),
+    // Optional: omitted = the caller themselves (self-application).
+    applicantPartyId: v.optional(v.id('parties')),
     criterion: tiCriterion,
     clientId: v.optional(v.string()),
     applicationId: v.optional(v.id('applications')),
@@ -154,7 +156,11 @@ export const upsertTiVerification = authedMutation({
     mayor: v.optional(mayorBlock),
     applicantDeclarationAccepted: v.optional(v.boolean()),
   },
-  handler: (ctx, args) => upsertTiVerificationImpl(ctx, ctx.viewer, args),
+  handler: (ctx, args) =>
+    upsertTiVerificationImpl(ctx, ctx.viewer, {
+      ...args,
+      applicantPartyId: args.applicantPartyId ?? ctx.viewer.party._id,
+    }),
 })
 
 export const submitTiVerification = authedMutation({

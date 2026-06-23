@@ -13,7 +13,10 @@ import { Route as UiRouteImport } from './routes/ui'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthedMyDataRouteImport } from './routes/_authed/my-data'
 import { Route as AuthedDashboardRouteImport } from './routes/_authed/dashboard'
+import { Route as AuthedConfirmRouteImport } from './routes/_authed/confirm'
+import { Route as AuthedApplyRouteImport } from './routes/_authed/apply'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const UiRoute = UiRouteImport.update({
@@ -35,9 +38,24 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedMyDataRoute = AuthedMyDataRouteImport.update({
+  id: '/my-data',
+  path: '/my-data',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedDashboardRoute = AuthedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedConfirmRoute = AuthedConfirmRouteImport.update({
+  id: '/confirm',
+  path: '/confirm',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedApplyRoute = AuthedApplyRouteImport.update({
+  id: '/apply',
+  path: '/apply',
   getParentRoute: () => AuthedRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -50,14 +68,20 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/ui': typeof UiRoute
+  '/apply': typeof AuthedApplyRoute
+  '/confirm': typeof AuthedConfirmRoute
   '/dashboard': typeof AuthedDashboardRoute
+  '/my-data': typeof AuthedMyDataRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/ui': typeof UiRoute
+  '/apply': typeof AuthedApplyRoute
+  '/confirm': typeof AuthedConfirmRoute
   '/dashboard': typeof AuthedDashboardRoute
+  '/my-data': typeof AuthedMyDataRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -66,21 +90,43 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteWithChildren
   '/about': typeof AboutRoute
   '/ui': typeof UiRoute
+  '/_authed/apply': typeof AuthedApplyRoute
+  '/_authed/confirm': typeof AuthedConfirmRoute
   '/_authed/dashboard': typeof AuthedDashboardRoute
+  '/_authed/my-data': typeof AuthedMyDataRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/ui' | '/dashboard' | '/api/auth/$'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/ui'
+    | '/apply'
+    | '/confirm'
+    | '/dashboard'
+    | '/my-data'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/ui' | '/dashboard' | '/api/auth/$'
+  to:
+    | '/'
+    | '/about'
+    | '/ui'
+    | '/apply'
+    | '/confirm'
+    | '/dashboard'
+    | '/my-data'
+    | '/api/auth/$'
   id:
     | '__root__'
     | '/'
     | '/_authed'
     | '/about'
     | '/ui'
+    | '/_authed/apply'
+    | '/_authed/confirm'
     | '/_authed/dashboard'
+    | '/_authed/my-data'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -122,11 +168,32 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/my-data': {
+      id: '/_authed/my-data'
+      path: '/my-data'
+      fullPath: '/my-data'
+      preLoaderRoute: typeof AuthedMyDataRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/dashboard': {
       id: '/_authed/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthedDashboardRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/confirm': {
+      id: '/_authed/confirm'
+      path: '/confirm'
+      fullPath: '/confirm'
+      preLoaderRoute: typeof AuthedConfirmRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/apply': {
+      id: '/_authed/apply'
+      path: '/apply'
+      fullPath: '/apply'
+      preLoaderRoute: typeof AuthedApplyRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/api/auth/$': {
@@ -140,11 +207,17 @@ declare module '@tanstack/solid-router' {
 }
 
 interface AuthedRouteChildren {
+  AuthedApplyRoute: typeof AuthedApplyRoute
+  AuthedConfirmRoute: typeof AuthedConfirmRoute
   AuthedDashboardRoute: typeof AuthedDashboardRoute
+  AuthedMyDataRoute: typeof AuthedMyDataRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedApplyRoute: AuthedApplyRoute,
+  AuthedConfirmRoute: AuthedConfirmRoute,
   AuthedDashboardRoute: AuthedDashboardRoute,
+  AuthedMyDataRoute: AuthedMyDataRoute,
 }
 
 const AuthedRouteWithChildren =

@@ -1,1 +1,0 @@
-import{p as e,w as t}from"./main-BE5GlHhk.js";var n=t(`<main><h1>About`);function r(){return e(n)}export{r as component};

@@ -249,11 +249,18 @@ export const listMine = query({
   handler: async (ctx) => {
     const viewer = await getViewer(ctx)
     if (!viewer) return []
-    return await ctx.db
+    const apps = await ctx.db
       .query('applications')
       .withIndex('by_applicant', (q) => q.eq('applicantPartyId', viewer.party._id))
       .order('desc')
       .take(50)
+    // Resolve each licence type's code so the UI can show a friendly name.
+    return Promise.all(
+      apps.map(async (app) => ({
+        ...app,
+        licenceTypeCode: (await ctx.db.get(app.licenceTypeId))?.code,
+      })),
+    )
   },
 })
 
